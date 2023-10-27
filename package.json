@@ -1,0 +1,26 @@
+{
+  "name": "resolve-bare",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/resolve-bare.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/holepunchto/resolve-bare/issues"
+  },
+  "homepage": "https://github.com/holepunchto/resolve-bare#readme",
+  "dependencies": {
+    "brittle": "^3.3.2"
+  }
+}
