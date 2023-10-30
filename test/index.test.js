@@ -47,6 +47,15 @@ test('package.json main', (t) => {
   })
 })
 
+test('package.json main is folder', (t) => {
+  t.plan(2)
+  const path = join(__dirname, '/fixtures/main-is-folder')
+  resolve(path, { basedir: __dirname }, (err, result) => {
+    t.is(err, null)
+    t.is(result, join(path, '/lib/index.js'))
+  })
+})
+
 test('no extension', (t) => {
   t.plan(2)
   const path = join(__dirname, '/fixtures/relative/path/index')

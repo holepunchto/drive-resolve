@@ -34,7 +34,17 @@ module.exports = (id, opts = {}, cb) => {
       getPkgEntrypoint(path, (err, pkg) => {
         if (err) cb(err)
         const main = pkg.main || 'index.js'
-        if (res) cb(null, join(path, main))
+        isFile(join(path, main), (err, res) => {
+          if (err) cb(err)
+          if (res) cb(null, join(path, main))
+        })
+        extensions.forEach(e => {
+          const index = join(path, main, 'index' + e)
+          isFile(index, (err, res) => {
+            if (err) cb(err)
+            if (res) cb(null, index)
+          })
+        })
       })
     })
   } else {
