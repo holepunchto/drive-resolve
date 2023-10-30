@@ -64,3 +64,27 @@ test('no extension', (t) => {
     t.is(result, path + '.js')
   })
 })
+
+test('async foo', (t) => {
+  t.plan(2)
+  const dir = join(__dirname, 'resolver')
+
+  resolve('./foo', { basedir: dir }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'foo.js'))
+  })
+
+  resolve('./foo.js', { basedir: dir }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'foo.js'))
+  })
+})
+
+test.skip('bar', function (t) {
+  t.plan(1)
+  const dir = join(__dirname, 'resolver')
+  resolve('foo', { basedir: dir + '/bar' }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.equal(res, join(dir, 'bar/node_modules/foo/index.js'))
+  })
+})
