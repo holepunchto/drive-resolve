@@ -126,8 +126,8 @@ function getNodeModulesDirs (start) {
 
 function getPkgEntrypoint (id, cb) {
   fs.readFile(join(id, 'package.json'), (err, data) => {
-    if (!err) cb(JSON.parse(data.toString()))
-    cb(null)
+    if (!err) return cb(JSON.parse(data.toString()))
+    return cb(null)
   })
 }
 
