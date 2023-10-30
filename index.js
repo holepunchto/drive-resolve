@@ -1,6 +1,16 @@
 const { dirname, join, basename, isAbsolute } = require('path')
 const fs = require('fs')
 
+const extensions = [
+  '',
+  '.js',
+  '.cjs',
+  '.mjs',
+  '.json',
+  '.bare',
+  '.node'
+]
+
 module.exports = (id, opts = {}, cb) => {
   const isFile = opts.isFile || defaultIsFile
   const isDir = opts.isDir || defaultIsDir
@@ -12,17 +22,6 @@ module.exports = (id, opts = {}, cb) => {
     } else {
       path = join(basedir, id)
     }
-
-    const extensions = [
-      '',
-      '.js',
-      '.cjs',
-      '.mjs',
-      '.json',
-      '.bare',
-      '.node'
-    ]
-
     extensions.forEach(e => {
       isFile(path + e, (err, res) => {
         if (err) cb(err)
@@ -69,6 +68,13 @@ function getPkg (candidates, isFile, cb) {
         }
       })
     } else {
+      extensions.forEach(e => {
+        const index = join(candidate, 'index' + e)
+        isFile(index, (err, res) => {
+          if (err) cb(err)
+          if (res) cb(null, index)
+        })
+      })
       if (candidates.length) getPkg(candidates, isFile, cb)
     }
   })

@@ -80,11 +80,11 @@ test('async foo', (t) => {
   })
 })
 
-test.skip('bar', function (t) {
+test('bar', function (t) {
   t.plan(1)
   const dir = join(__dirname, 'resolver')
   resolve('foo', { basedir: dir + '/bar' }, function (err, res, pkg) {
     if (err) t.fail(err)
-    t.equal(res, join(dir, 'bar/node_modules/foo/index.js'))
+    t.is(res, join(dir, 'bar/node_modules/foo/index.js'))
   })
 })
