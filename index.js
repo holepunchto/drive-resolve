@@ -12,14 +12,24 @@ module.exports = (id, opts = {}, cb) => {
     } else {
       path = join(basedir, id)
     }
-    isFile(path, (err, res) => {
-      if (err) cb(err)
-      if (res) cb(null, path)
+
+    const extensions = [
+      '',
+      '.js',
+      '.cjs',
+      '.mjs',
+      '.json',
+      '.bare',
+      '.node'
+    ]
+
+    extensions.forEach(e => {
+      isFile(path + e, (err, res) => {
+        if (err) cb(err)
+        if (res) cb(null, path + e)
+      })
     })
-    isFile(path + '.js', (err, res) => { // TODO check all extensions?
-      if (err) cb(err)
-      if (res) cb(null, path + '.js')
-    })
+
     isDir(path, (err, res) => {
       if (err) cb(err)
       getPkgEntrypoint(path, (err, pkg) => {
