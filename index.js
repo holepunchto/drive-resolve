@@ -32,18 +32,28 @@ module.exports = (id, opts = {}, cb) => {
       if (err) cb(err)
       getPkgEntrypoint(path, (err, pkg) => {
         if (err) cb(err)
-        const main = pkg.main || 'index.js'
-        isFile(join(path, main), (err, res) => {
-          if (err) cb(err)
-          if (res) cb(null, join(path, main))
-        })
-        extensions.forEach(e => {
-          const index = join(path, main, 'index' + e)
-          isFile(index, (err, res) => {
+        if (pkg) {
+          const main = pkg.main || 'index.js'
+          isFile(join(path, main), (err, res) => {
             if (err) cb(err)
-            if (res) cb(null, index)
+            if (res) cb(null, join(path, main))
           })
-        })
+          extensions.forEach(e => {
+            const index = join(path, main, 'index' + e)
+            isFile(index, (err, res) => {
+              if (err) cb(err)
+              if (res) cb(null, index)
+            })
+          })
+        } else {
+          extensions.forEach(e => {
+            const index = join(path, 'index' + e)
+            isFile(index, (err, res) => {
+              if (err) cb(err)
+              if (res) cb(null, index)
+            })
+          })
+        }
       })
     })
   } else {
@@ -61,8 +71,19 @@ function getPkg (candidates, isFile, cb) {
       fs.readFile(pkgPath, (err, data) => {
         if (err) cb(err)
         try {
-          const main = JSON.parse(data.toString()).main
+          const main = JSON.parse(data.toString()).main || 'index.js'
           if (!err) cb(null, join(candidate, main))
+          isFile(join(candidate, main), (err, res) => {
+            if (err) cb(err)
+            if (res) cb(null, join(candidate, main))
+          })
+          extensions.forEach(e => {
+            const index = join(candidate, main, 'index' + e)
+            isFile(index, (err, res) => {
+              if (err) cb(err)
+              if (res) cb(null, index)
+            })
+          })
         } catch (err) {
           cb(err)
         }

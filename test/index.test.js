@@ -88,3 +88,48 @@ test('bar', function (t) {
     t.is(res, join(dir, 'bar/node_modules/foo/index.js'))
   })
 })
+
+test('baz', function (t) {
+  t.plan(1)
+  const dir = join(__dirname, 'resolver')
+
+  resolve('./baz', { basedir: dir }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'baz/quux.js'))
+  })
+})
+
+test.skip('biz', function (t) {
+  t.plan(6)
+  const dir = join(__dirname, 'resolver/biz/node_modules')
+
+  resolve('./grux', { basedir: dir }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'grux/index.js'))
+  })
+
+  resolve('./garply', { basedir: dir }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'garply/lib/index.js'))
+  })
+
+  resolve('tiv', { basedir: dir + '/grux' }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'tiv/index.js'))
+  })
+
+  resolve('tiv', { basedir: dir + '/garply' }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'tiv/index.js'))
+  })
+
+  resolve('grux', { basedir: dir + '/tiv' }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'grux/index.js'))
+  })
+
+  resolve('garply', { basedir: dir + '/tiv' }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'garply/lib/index.js'))
+  })
+})
