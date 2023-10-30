@@ -1,34 +1,22 @@
-const { join, sep } = require('path')
+const { dirname, join } = require('path')
 const test = require('brittle')
-const resolve = require('../index.js')
-const path = require('path')
+const resolve = require('../index.js').sync
 
-test('dotdot', (t) => {
-  t.plan(4)
-  const dir = path.join(__dirname, '/dotdot/abc')
-
-  resolve('..', { basedir: dir }, (err, res, pkg) => {
-    t.is(err, null)
-    t.is(res, path.join(__dirname, 'dotdot/index.js'))
-  })
-
-  resolve('.', { basedir: dir }, (err, res, pkg) => {
-    t.is(err, null)
-    t.is(res, path.join(dir, 'index.js'))
-  })
+test('resolves abosute path', (t) => {
+  const path = '/absolute/path'
+  const result = resolve(path)
+  t.is(result, path)
 })
 
-test('non-existent basedir should return invalid basedir error', function (t) {
-  t.plan(2)
-
-  const opts = {
-    basedir: join(sep, 'unreal', 'path', 'that', 'does', 'not', 'exist')
+test('resolves relative path', (t) => {
+  {
+    const path = './relative/path'
+    const result = resolve(path)
+    t.is(result, join(dirname(__dirname), '/lib/relative/path'))
   }
-
-  const module = './dotdot/abc'
-
-  resolve(module, opts, function (err, res) {
-    t.is(err.code, 'INVALID_BASEDIR')
-    t.is(res, undefined)
-  })
+  {
+    const path = '../relative/path'
+    const result = resolve(path)
+    t.is(result, join(dirname(__dirname), '/relative/path'))
+  }
 })

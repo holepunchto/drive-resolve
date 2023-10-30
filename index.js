@@ -1,13 +1,10 @@
 const { dirname, join, basename, isAbsolute } = require('path')
 const fs = require('fs')
-const os = require('os')
 
-module.exports = (req, opts = {}, cb) => {
+module.exports = (id, opts = {}, cb) => {
   const isFile = opts.isFile || defaultIsFile
   const isDir = opts.isDir || defaultIsDir
   const basedir = opts.basedir
-  const id = (req === '..' || req === '.') ? join(basedir, req) : req
-
   if (id !== basename(id)) { // is path
     let path = ''
     if (isAbsolute(id)) {
@@ -15,40 +12,22 @@ module.exports = (req, opts = {}, cb) => {
     } else {
       path = join(basedir, id)
     }
-
-    isDir(basedir, (err, res) => { // first lets check if basedir is valid
-      if (err || !res) {
-        const error = new Error('Provided basedir "' + basedir + '" is not a directory')
-        error.code = 'INVALID_BASEDIR'
-        cb(error)
-      }
-
-      const extensions = [
-        '',
-        '.js',
-        '.cjs',
-        '.mjs',
-        '.json',
-        '.bare',
-        '.node'
-      ]
-
-      extensions.forEach(e => {
-        isFile(path, (err, res) => {
-          if (err) cb(err)
-          if (res) cb(null, path + e)
-        })
-      })
-
-      isDir(path, (err, res) => {
+    isFile(path, (err, res) => {
+      if (err) cb(err)
+      if (res) cb(null, path)
+    })
+    isFile(path + '.js', (err, res) => { // TODO check all extensions?
+      if (err) cb(err)
+      if (res) cb(null, path + '.js')
+    })
+    isDir(path, (err, res) => {
+      if (err) cb(err)
+      getPkgEntrypoint(path, (err, pkg) => {
         if (err) cb(err)
-        getPkgEntrypoint(path, (err, pkg) => {
-          const main = !err && pkg.main ? pkg.main : 'index.js'
-          if (res) cb(null, join(path, main))
-        })
+        const main = pkg.main || 'index.js'
+        if (res) cb(null, join(path, main))
       })
     })
-
   } else {
     const dirs = getNodeModulesDirs(basedir)
     const candidates = dirs.map(e => join(e, id))
@@ -78,7 +57,7 @@ function getPkg (candidates, isFile, cb) {
 
 function getNodeModulesDirs (start) {
   const dirs = []
-  const nodeModules = 'node_modules'
+  const nodeModules = 'node_modules' // TODO improve, check is_core_module
 
   let dir = start
 
@@ -91,15 +70,9 @@ function getNodeModulesDirs (start) {
 
 function getPkgEntrypoint (id, cb) {
   fs.readFile(join(id, 'package.json'), (err, data) => {
-    if (err) {
-      cb(err)
-    } else {
-      cb(null, JSON.parse(data.toString()))
-    }
+    if (!err) cb(err, JSON.parse(data.toString()))
   })
 }
-
-// TODO this is temporary will be changed with hyperdrive API
 
 const defaultIsFile = function isFile (file, cb) {
   fs.stat(file, function (err, stat) {
