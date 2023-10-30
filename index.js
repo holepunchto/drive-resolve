@@ -22,22 +22,26 @@ module.exports = (id, opts = {}, cb) => {
     } else {
       path = join(basedir, id)
     }
+    // path is file with or without extension
     extensions.forEach(e => {
       isFile(path + e, (err, res) => {
         if (err) cb(err)
         if (res) cb(null, path + e)
       })
     })
+    // path is folder
     isDir(path, (err, res) => {
       if (err) cb(err)
-      getPkgEntrypoint(path, (err, pkg) => {
-        if (err) cb(err)
+      getPkgEntrypoint(path, (pkg) => {
         if (pkg) {
+          // path is dir and has package.json, with or without main
           const main = pkg.main || 'index.js'
+          // main is file
           isFile(join(path, main), (err, res) => {
             if (err) cb(err)
             if (res) cb(null, join(path, main))
           })
+          // main is folder
           extensions.forEach(e => {
             const index = join(path, main, 'index' + e)
             isFile(index, (err, res) => {
@@ -46,6 +50,7 @@ module.exports = (id, opts = {}, cb) => {
             })
           })
         } else {
+          // path is dir and doesnt have package.json
           extensions.forEach(e => {
             const index = join(path, 'index' + e)
             isFile(index, (err, res) => {
@@ -57,6 +62,7 @@ module.exports = (id, opts = {}, cb) => {
       })
     })
   } else {
+    // id is not path
     const dirs = getNodeModulesDirs(basedir)
     const candidates = dirs.map(e => join(e, id))
     getPkg(candidates, isFile, cb)
@@ -71,12 +77,14 @@ function getPkg (candidates, isFile, cb) {
       fs.readFile(pkgPath, (err, data) => {
         if (err) cb(err)
         try {
+          // candidate has package.json
           const main = JSON.parse(data.toString()).main || 'index.js'
-          if (!err) cb(null, join(candidate, main))
+          // main is a file
           isFile(join(candidate, main), (err, res) => {
             if (err) cb(err)
             if (res) cb(null, join(candidate, main))
           })
+          // main is a folder, check folder/index[extension]
           extensions.forEach(e => {
             const index = join(candidate, main, 'index' + e)
             isFile(index, (err, res) => {
@@ -85,10 +93,12 @@ function getPkg (candidates, isFile, cb) {
             })
           })
         } catch (err) {
+          // invalid package
           cb(err)
         }
       })
     } else {
+      // no package.json in candidate
       extensions.forEach(e => {
         const index = join(candidate, 'index' + e)
         isFile(index, (err, res) => {
@@ -96,8 +106,8 @@ function getPkg (candidates, isFile, cb) {
           if (res) cb(null, index)
         })
       })
-      if (candidates.length) getPkg(candidates, isFile, cb)
     }
+    if (candidates.length) getPkg(candidates, isFile, cb)
   })
 }
 
@@ -116,7 +126,8 @@ function getNodeModulesDirs (start) {
 
 function getPkgEntrypoint (id, cb) {
   fs.readFile(join(id, 'package.json'), (err, data) => {
-    if (!err) cb(err, JSON.parse(data.toString()))
+    if (!err) cb(JSON.parse(data.toString()))
+    cb(null)
   })
 }
 

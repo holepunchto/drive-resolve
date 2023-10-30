@@ -99,7 +99,7 @@ test('baz', function (t) {
   })
 })
 
-test.skip('biz', function (t) {
+test('biz', function (t) {
   t.plan(6)
   const dir = join(__dirname, 'resolver/biz/node_modules')
 
