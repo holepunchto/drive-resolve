@@ -29,7 +29,6 @@ module.exports = (id, opts = {}, cb) => {
         if (res) cb(null, path + e)
       })
     })
-
     isDir(path, (err, res) => {
       if (err) cb(err)
       getPkgEntrypoint(path, (err, pkg) => {
