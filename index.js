@@ -16,29 +16,7 @@ module.exports = (id, opts = {}, cb) => {
     isDir(path, (err, res) => {
       if (err) return cb(err)
       if (res) { // path is dir
-        getPkgEntrypoint(path, (pkg) => {
-          if (pkg) { // path is dir and has package.json, with or without main
-            const main = pkg.main || 'index.js'
-            if (main === basename(main)) { // main is file
-              isFile(join(path, main), (err, res) => {
-                if (err) return cb(err)
-                if (res) { // main is file
-                  cb(null, join(path, main))
-                } else { // file does not exist
-                  // TODO throw error
-                  const index = join(path, 'index')
-                  checkExtensions(index, [...extensions], cb, () => cb(throwIncorrectPackageMain()))
-                }
-              })
-            } else { // main is dir
-              const index = join(path, main, 'index')
-              checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
-            }
-          } else { // path is dir and doesnt have package.json
-            const index = join(path, 'index')
-            checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
-          }
-        })
+        resolveDir(id, basedir, path, isFile, extensions, cb)
       } else { // path is file with or without extension
         checkExtensions(path, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
       }
@@ -47,8 +25,34 @@ module.exports = (id, opts = {}, cb) => {
     // id is not path
     const dirs = getNodeModulesDirs(basedir)
     const candidates = dirs.map(e => join(e, id))
-    getPkg(candidates, isFile, extensions, cb)
+    resolveNodeModules(candidates, isFile, extensions, id, cb)
   }
+}
+
+function resolveDir (id, basedir, path, isFile, extensions, cb) {
+  getPkgEntrypoint(path, (pkg) => {
+    if (pkg) { // path is dir and has package.json, with or without main
+      const main = pkg.main || 'index.js'
+      if (main === basename(main)) { // main is file
+        isFile(join(path, main), (err, res) => {
+          if (err) return cb(err)
+          if (res) { // main is file
+            cb(null, join(path, main))
+          } else { // file does not exist
+            // TODO throw error
+            const index = join(path, 'index')
+            checkExtensions(index, [...extensions], cb, () => cb(throwIncorrectPackageMain()))
+          }
+        })
+      } else { // main is dir
+        const index = join(path, main, 'index')
+        checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
+      }
+    } else { // path is dir and doesnt have package.json
+      const index = join(path, 'index')
+      checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
+    }
+  })
 }
 
 function checkExtensions (index, extensions, cb, notFound) {
@@ -64,7 +68,7 @@ function checkExtensions (index, extensions, cb, notFound) {
   })
 }
 
-function getPkg (candidates, isFile, extensions, cb) {
+function resolveNodeModules (candidates, isFile, extensions, id, cb) {
   const candidate = candidates.shift()
   const pkgPath = join(candidate, 'package.json')
   isFile(pkgPath, (_, res) => {
@@ -102,7 +106,7 @@ function getPkg (candidates, isFile, extensions, cb) {
         })
       })
     }
-    if (candidates.length) getPkg(candidates, isFile, extensions, cb)
+    if (candidates.length) resolveNodeModules(candidates, isFile, extensions, id, cb)
   })
 }
 
@@ -126,7 +130,7 @@ function getPkgEntrypoint (id, cb) {
   })
 }
 
-const defaultIsFile = function isFile (file, cb) {
+function defaultIsFile (file, cb) {
   fs.stat(file, function (err, stat) {
     if (!err) {
       return cb(null, stat.isFile() || stat.isFIFO())
@@ -136,7 +140,7 @@ const defaultIsFile = function isFile (file, cb) {
   })
 }
 
-const defaultIsDir = function isDirectory (dir, cb) {
+function defaultIsDir (dir, cb) {
   fs.stat(dir, function (err, stat) {
     if (!err) {
       return cb(null, stat.isDirectory())
@@ -146,13 +150,19 @@ const defaultIsDir = function isDirectory (dir, cb) {
   })
 }
 
-const throwNotFound = (id, basedir) => {
+function throwNotFound (id, basedir) {
   const error = new Error(`Cannot find module '${id}' from '${basedir}'`)
   error.code = 'MODULE_NOT_FOUND'
   return error
 }
 
-const throwIncorrectPackageMain = () => {
+function throwModuleNotFound (id, basedir) {
+  const error = new Error(`Cannot find module '${id}'`)
+  error.code = 'MODULE_NOT_FOUND'
+  return error
+}
+
+function throwIncorrectPackageMain () {
   const error = new Error()
   error.code = 'INCORRECT_PACKAGE_MAIN'
   return error
