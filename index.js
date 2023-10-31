@@ -74,7 +74,7 @@ function resolveNodeModules (candidates, isFile, extensions, id, cb) {
           })
           // main is a folder, check folder/index[extension]
           const index = join(candidate, main, 'index')
-          checkExtensions(index, [...extensions], cb, candidates.length === 0 ? () => cb(throwModuleNotFound(id)) : () => {})
+          checkExtensions(index, [...extensions], cb, candidates.length ? noob : () => cb(throwModuleNotFound(id)))
         } catch (err) {
           // invalid package
           cb(err)
@@ -82,7 +82,7 @@ function resolveNodeModules (candidates, isFile, extensions, id, cb) {
       })
     } else {
       const index = join(candidate, 'index')
-      checkExtensions(index, [...extensions], cb, () => {}) // TODO throw if no more candidates
+      checkExtensions(index, [...extensions], cb, candidate.length ? noob : () => cb(throwModuleNotFound(id)))
     }
     if (candidates.length) resolveNodeModules(candidates, isFile, extensions, id, cb)
   })
@@ -169,3 +169,7 @@ const defaultExtensions = [
   '.node',
   '.coffee'
 ]
+
+function noob () {
+  // noob function
+}
