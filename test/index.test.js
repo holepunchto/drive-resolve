@@ -174,3 +174,81 @@ test('cup', function (t) {
     t.is(err.code, 'MODULE_NOT_FOUND')
   })
 })
+
+test('mug', function (t) {
+  t.plan(3)
+  const dir = join(__dirname, 'resolver')
+
+  resolve('./mug', { basedir: dir }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'mug.js'))
+  })
+
+  resolve('./mug', { basedir: dir, extensions: ['.coffee', '.js'] }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, '/mug.coffee'))
+  })
+
+  resolve('./mug', { basedir: dir, extensions: ['.js', '.coffee'] }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, '/mug.js'))
+  })
+})
+
+test('empty main', function (t) {
+  t.plan(1)
+
+  const resolverDir = join(__dirname, 'resolver')
+  const dir = join(resolverDir, 'empty_main')
+
+  resolve('./empty_main', { basedir: resolverDir }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'index.js'))
+  })
+})
+
+test('incorrect main', function (t) {
+  t.plan(1)
+
+  const resolverDir = join(__dirname, 'resolver')
+  const dir = join(resolverDir, 'incorrect_main')
+
+  resolve('./incorrect_main', { basedir: resolverDir }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'index.js'))
+  })
+})
+
+test('missing index', function (t) {
+  t.plan(2)
+
+  const resolverDir = join(__dirname, 'resolver')
+  resolve('./missing_index', { basedir: resolverDir }, function (err, res, pkg) {
+    t.ok(err instanceof Error)
+    t.is(err && err.code, 'INCORRECT_PACKAGE_MAIN', 'error has correct error code')
+  })
+})
+
+test('missing main', function (t) {
+  t.plan(1)
+
+  const resolverDir = join(__dirname, 'resolver')
+  const dir = join(resolverDir, 'missing_main')
+
+  resolve('./missing_main', { basedir: resolverDir }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'index.js'))
+  })
+})
+
+test('null main', function (t) {
+  t.plan(1)
+
+  const resolverDir = join(__dirname, 'resolver')
+  const dir = join(resolverDir, 'null_main')
+
+  resolve('./null_main', { basedir: resolverDir }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'index.js'))
+  })
+})

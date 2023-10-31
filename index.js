@@ -19,22 +19,28 @@ module.exports = (id, opts = {}, cb) => {
         getPkgEntrypoint(path, (pkg) => {
           if (pkg) { // path is dir and has package.json, with or without main
             const main = pkg.main || 'index.js'
-            isFile(join(path, main), (err, res) => {
-              if (err) return cb(err)
-              if (res) { // main is file
-                cb(null, join(path, main))
-              } else { // main is folder
-                const index = join(path, main, 'index')
-                checkExtensions(index, [...extensions], cb, () => cb(notFoundError(id, basedir)))
-              }
-            })
+            if (main === basename(main)) { // main is file
+              isFile(join(path, main), (err, res) => {
+                if (err) return cb(err)
+                if (res) { // main is file
+                  cb(null, join(path, main))
+                } else { // file does not exist
+                  // TODO throw error
+                  const index = join(path, 'index')
+                  checkExtensions(index, [...extensions], cb, () => cb(throwIncorrectPackageMain()))
+                }
+              })
+            } else { // main is dir
+              const index = join(path, main, 'index')
+              checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
+            }
           } else { // path is dir and doesnt have package.json
             const index = join(path, 'index')
-            checkExtensions(index, [...extensions], cb, () => cb(notFoundError(id, basedir)))
+            checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
           }
         })
       } else { // path is file with or without extension
-        checkExtensions(path, [...extensions], cb, () => cb(notFoundError(id, basedir)))
+        checkExtensions(path, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
       }
     })
   } else {
@@ -140,9 +146,15 @@ const defaultIsDir = function isDirectory (dir, cb) {
   })
 }
 
-const notFoundError = (id, basedir) => {
+const throwNotFound = (id, basedir) => {
   const error = new Error(`Cannot find module '${id}' from '${basedir}'`)
   error.code = 'MODULE_NOT_FOUND'
+  return error
+}
+
+const throwIncorrectPackageMain = () => {
+  const error = new Error()
+  error.code = 'INCORRECT_PACKAGE_MAIN'
   return error
 }
 
