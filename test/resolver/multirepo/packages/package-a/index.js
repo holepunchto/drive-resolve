@@ -1,12 +1,12 @@
-'use strict'
+'use strict';
 
-const assert = require('assert')
-const path = require('path')
-const resolve = require('resolve')
+var assert = require('assert');
+var path = require('path');
+var resolve = require('resolve');
 
-const basedir = __dirname + '/node_modules/@my-scope/package-b'
+var basedir = __dirname + '/node_modules/@my-scope/package-b';
 
-const expected = path.join(__dirname, '../../node_modules/jquery/dist/jquery.js')
+var expected = path.join(__dirname, '../../node_modules/jquery/dist/jquery.js');
 
 /*
  * preserveSymlinks === false
@@ -15,8 +15,8 @@ const expected = path.join(__dirname, '../../node_modules/jquery/dist/jquery.js'
  * - packages/node_modules
  * - node_modules
  */
-assert.equal(resolve.sync('jquery', { basedir, preserveSymlinks: false }), expected)
-assert.equal(resolve.sync('../../node_modules/jquery', { basedir, preserveSymlinks: false }), expected)
+assert.equal(resolve.sync('jquery', { basedir: basedir, preserveSymlinks: false }), expected);
+assert.equal(resolve.sync('../../node_modules/jquery', { basedir: basedir, preserveSymlinks: false }), expected);
 
 /*
  * preserveSymlinks === true
@@ -29,7 +29,7 @@ assert.equal(resolve.sync('../../node_modules/jquery', { basedir, preserveSymlin
  * - packages/node_modules
  * - node_modules
  */
-assert.equal(resolve.sync('jquery', { basedir, preserveSymlinks: true }), expected)
-assert.equal(resolve.sync('../../../../../node_modules/jquery', { basedir, preserveSymlinks: true }), expected)
+assert.equal(resolve.sync('jquery', { basedir: basedir, preserveSymlinks: true }), expected);
+assert.equal(resolve.sync('../../../../../node_modules/jquery', { basedir: basedir, preserveSymlinks: true }), expected);
 
-console.log(' * all monorepo paths successfully resolved through symlinks')
+console.log(' * all monorepo paths successfully resolved through symlinks');
