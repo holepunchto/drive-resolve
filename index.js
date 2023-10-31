@@ -1,3 +1,5 @@
+'use strict'
+
 const { dirname, join, basename, isAbsolute } = require('path')
 const fs = require('fs')
 
@@ -25,7 +27,7 @@ module.exports = (id, opts = {}, cb) => {
     // id is not path
     const dirs = getNodeModulesDirs(basedir)
     const candidates = dirs.map(e => join(e, id))
-    resolveNodeModules(candidates, isFile, extensions, id, cb)
+    resolveNodeModules(candidates, isFile, [...extensions], id, cb)
   }
 }
 
@@ -55,19 +57,6 @@ function resolveDir (id, basedir, path, isFile, extensions, cb) {
   })
 }
 
-function checkExtensions (index, extensions, cb, notFound) {
-  if (extensions.length === 0) return notFound()
-  const current = index + extensions.shift()
-  defaultIsFile(current, (err, res) => {
-    if (err) return cb(err)
-    if (res) {
-      return cb(null, current)
-    } else {
-      checkExtensions(index, extensions, cb, notFound)
-    }
-  })
-}
-
 function resolveNodeModules (candidates, isFile, extensions, id, cb) {
   const candidate = candidates.shift()
   const pkgPath = join(candidate, 'package.json')
@@ -84,29 +73,31 @@ function resolveNodeModules (candidates, isFile, extensions, id, cb) {
             if (res) cb(null, join(candidate, main))
           })
           // main is a folder, check folder/index[extension]
-          extensions.forEach(e => {
-            const index = join(candidate, main, 'index' + e)
-            isFile(index, (err, res) => {
-              if (err) cb(err)
-              if (res) cb(null, index)
-            })
-          })
+          const index = join(candidate, main, 'index')
+          checkExtensions(index, [...extensions], cb, candidates.length === 0 ? () => cb(throwModuleNotFound(id)) : () => {})
         } catch (err) {
           // invalid package
           cb(err)
         }
       })
     } else {
-      // no package.json in candidate
-      extensions.forEach(e => {
-        const index = join(candidate, 'index' + e)
-        isFile(index, (err, res) => {
-          if (err) cb(err)
-          if (res) cb(null, index)
-        })
-      })
+      const index = join(candidate, 'index')
+      checkExtensions(index, [...extensions], cb, () => {}) // TODO throw if no more candidates
     }
     if (candidates.length) resolveNodeModules(candidates, isFile, extensions, id, cb)
+  })
+}
+
+function checkExtensions (index, extensions, cb, notFound) {
+  if (extensions.length === 0) return notFound()
+  const current = index + extensions.shift()
+  defaultIsFile(current, (err, res) => {
+    if (err) return cb(err)
+    if (res) {
+      return cb(null, current)
+    } else {
+      checkExtensions(index, extensions, cb, notFound)
+    }
   })
 }
 
