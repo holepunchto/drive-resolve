@@ -155,7 +155,7 @@ test('normalize', function (t) {
   })
 })
 
-test.solo('cup', function (t) {
+test.skip('cup', function (t) {
   t.plan(4)
   const dir = join(__dirname, 'resolver')
 

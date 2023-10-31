@@ -23,44 +23,47 @@ module.exports = (id, opts = {}, cb) => {
     } else {
       path = join(basedir, id)
     }
-    // path is file with or without extension
-    extensions.forEach(e => {
-      isFile(path + e, (err, res) => {
-        if (err) cb(err)
-        if (res) cb(null, path + e)
-      })
-    })
-    // path is folder
     isDir(path, (err, res) => {
-      if (err) cb(err)
-      getPkgEntrypoint(path, (pkg) => {
-        if (pkg) {
+      if (err) return cb(err)
+      // path is dir
+      if (res) {
+        getPkgEntrypoint(path, (pkg) => {
+          if (pkg) {
           // path is dir and has package.json, with or without main
-          const main = pkg.main || 'index.js'
-          // main is file
-          isFile(join(path, main), (err, res) => {
-            if (err) cb(err)
-            if (res) cb(null, join(path, main))
-          })
-          // main is folder
-          extensions.forEach(e => {
-            const index = join(path, main, 'index' + e)
-            isFile(index, (err, res) => {
+            const main = pkg.main || 'index.js'
+            // main is file
+            isFile(join(path, main), (err, res) => {
               if (err) cb(err)
-              if (res) cb(null, index)
+              if (res) cb(null, join(path, main))
             })
-          })
-        } else {
+            // main is folder
+            extensions.forEach(e => {
+              const index = join(path, main, 'index' + e)
+              isFile(index, (err, res) => {
+                if (err) cb(err)
+                if (res) cb(null, index)
+              })
+            })
+          } else {
           // path is dir and doesnt have package.json
-          extensions.forEach(e => {
-            const index = join(path, 'index' + e)
-            isFile(index, (err, res) => {
-              if (err) cb(err)
-              if (res) cb(null, index)
+            extensions.forEach(e => {
+              const index = join(path, 'index' + e)
+              isFile(index, (err, res) => {
+                if (err) cb(err)
+                if (res) cb(null, index)
+              })
             })
+          }
+        })
+      } else {
+        // path is file with or without extension
+        extensions.forEach(e => {
+          isFile(path + e, (err, res) => {
+            if (err) cb(err)
+            if (res) cb(null, path + e)
           })
-        }
-      })
+        })
+      }
     })
   } else {
     // id is not path
