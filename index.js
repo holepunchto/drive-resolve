@@ -23,8 +23,7 @@ module.exports = (id, opts = {}, cb) => {
         checkExtensions(path, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
       }
     })
-  } else {
-    // id is not path
+  } else { // id is not path
     const dirs = getNodeModulesDirs(basedir)
     const candidates = dirs.map(e => join(e, id))
     resolveNodeModules(candidates, isFile, [...extensions], id, cb)
@@ -32,20 +31,11 @@ module.exports = (id, opts = {}, cb) => {
 }
 
 function resolveDir (id, basedir, path, isFile, extensions, cb) {
-  getPkgEntrypoint(path, (pkg) => {
-    if (pkg) { // path is dir and has package.json, with or without main
+  getPackage(path, (pkg) => {
+    if (pkg) { // has package.json
       const main = pkg.main || 'index.js'
       if (main === basename(main)) { // main is file
-        isFile(join(path, main), (err, res) => {
-          if (err) return cb(err)
-          if (res) { // main is file
-            cb(null, join(path, main))
-          } else { // file does not exist
-            // TODO throw error
-            const index = join(path, 'index')
-            checkExtensions(index, [...extensions], cb, () => cb(throwIncorrectPackageMain()))
-          }
-        })
+        resolvePackageMain(path, main, [...extensions], isFile, cb)
       } else { // main is dir
         const index = join(path, main, 'index')
         checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
@@ -59,32 +49,35 @@ function resolveDir (id, basedir, path, isFile, extensions, cb) {
 
 function resolveNodeModules (candidates, isFile, extensions, id, cb) {
   const candidate = candidates.shift()
-  const pkgPath = join(candidate, 'package.json')
-  isFile(pkgPath, (_, res) => {
-    if (res) {
-      fs.readFile(pkgPath, (err, data) => {
-        if (err) cb(err)
-        try {
-          // candidate has package.json
-          const main = JSON.parse(data.toString()).main || 'index.js'
-          // main is a file
-          isFile(join(candidate, main), (err, res) => {
-            if (err) cb(err)
-            if (res) cb(null, join(candidate, main))
-          })
-          // main is a folder, check folder/index[extension]
-          const index = join(candidate, main, 'index')
-          checkExtensions(index, [...extensions], cb, candidates.length ? noob : () => cb(throwModuleNotFound(id)))
-        } catch (err) {
-          // invalid package
-          cb(err)
-        }
-      })
-    } else {
+  const path = candidate
+  getPackage(path, (pkg) => {
+    if (pkg) { // has package.json
+      const main = pkg.main || 'index.js'
+      if (main === basename(main)) { // main is file
+        resolvePackageMain(path, main, [...extensions], isFile, cb)
+      } else { // main is dir
+        const index = join(candidate, main, 'index')
+        const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
+        checkExtensions(index, [...extensions], cb, callback)
+      }
+    } else { // path is dir and doesnt have package.json
       const index = join(candidate, 'index')
-      checkExtensions(index, [...extensions], cb, candidate.length ? noob : () => cb(throwModuleNotFound(id)))
+      const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
+      checkExtensions(index, [...extensions], cb, callback)
     }
-    if (candidates.length) resolveNodeModules(candidates, isFile, extensions, id, cb)
+  })
+}
+
+function resolvePackageMain (path, main, extensions, isFile, cb) {
+  isFile(join(path, main), (err, res) => {
+    if (err) return cb(err)
+    if (res) {
+      cb(null, join(path, main))
+    } else {
+      // TODO throw error here (main does not exist and no index.js)
+      const index = join(path, 'index')
+      checkExtensions(index, [...extensions], cb, () => cb(throwIncorrectPackageMain()))
+    }
   })
 }
 
@@ -103,7 +96,7 @@ function checkExtensions (index, extensions, cb, notFound) {
 
 function getNodeModulesDirs (start) {
   const dirs = []
-  const nodeModules = 'node_modules' // TODO improve, check is_core_module
+  const nodeModules = 'node_modules'
 
   let dir = start
 
@@ -114,7 +107,7 @@ function getNodeModulesDirs (start) {
   return dirs
 }
 
-function getPkgEntrypoint (id, cb) {
+function getPackage (id, cb) {
   fs.readFile(join(id, 'package.json'), (err, data) => {
     if (!err) return cb(JSON.parse(data.toString()))
     return cb(null)
@@ -169,7 +162,3 @@ const defaultExtensions = [
   '.node',
   '.coffee'
 ]
-
-function noob () {
-  // noob function
-}
