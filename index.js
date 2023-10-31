@@ -1,18 +1,8 @@
 const { dirname, join, basename, isAbsolute } = require('path')
 const fs = require('fs')
 
-const extensions = [
-  '',
-  '.js',
-  '.cjs',
-  '.mjs',
-  '.json',
-  '.bare',
-  '.node',
-  '.coffee'
-]
-
 module.exports = (id, opts = {}, cb) => {
+  const extensions = opts.extensions || defaultExtensions
   const isFile = opts.isFile || defaultIsFile
   const isDir = opts.isDir || defaultIsDir
   const basedir = opts.basedir
@@ -25,55 +15,50 @@ module.exports = (id, opts = {}, cb) => {
     }
     isDir(path, (err, res) => {
       if (err) return cb(err)
-      // path is dir
-      if (res) {
+      if (res) { // path is dir
         getPkgEntrypoint(path, (pkg) => {
-          if (pkg) {
-          // path is dir and has package.json, with or without main
+          if (pkg) { // path is dir and has package.json, with or without main
             const main = pkg.main || 'index.js'
-            // main is file
             isFile(join(path, main), (err, res) => {
-              if (err) cb(err)
-              if (res) cb(null, join(path, main))
+              if (err) return cb(err)
+              if (res) { // main is file
+                cb(null, join(path, main))
+              } else { // main is folder
+                const index = join(path, main, 'index')
+                checkExtensions(index, [...extensions], cb, () => cb(notFoundError(id, basedir)))
+              }
             })
-            // main is folder
-            extensions.forEach(e => {
-              const index = join(path, main, 'index' + e)
-              isFile(index, (err, res) => {
-                if (err) cb(err)
-                if (res) cb(null, index)
-              })
-            })
-          } else {
-          // path is dir and doesnt have package.json
-            extensions.forEach(e => {
-              const index = join(path, 'index' + e)
-              isFile(index, (err, res) => {
-                if (err) cb(err)
-                if (res) cb(null, index)
-              })
-            })
+          } else { // path is dir and doesnt have package.json
+            const index = join(path, 'index')
+            checkExtensions(index, [...extensions], cb, () => cb(notFoundError(id, basedir)))
           }
         })
-      } else {
-        // path is file with or without extension
-        extensions.forEach(e => {
-          isFile(path + e, (err, res) => {
-            if (err) cb(err)
-            if (res) cb(null, path + e)
-          })
-        })
+      } else { // path is file with or without extension
+        checkExtensions(path, [...extensions], cb, () => cb(notFoundError(id, basedir)))
       }
     })
   } else {
     // id is not path
     const dirs = getNodeModulesDirs(basedir)
     const candidates = dirs.map(e => join(e, id))
-    getPkg(candidates, isFile, cb)
+    getPkg(candidates, isFile, extensions, cb)
   }
 }
 
-function getPkg (candidates, isFile, cb) {
+function checkExtensions (index, extensions, cb, notFound) {
+  if (extensions.length === 0) return notFound()
+  const current = index + extensions.shift()
+  defaultIsFile(current, (err, res) => {
+    if (err) return cb(err)
+    if (res) {
+      return cb(null, current)
+    } else {
+      checkExtensions(index, extensions, cb, notFound)
+    }
+  })
+}
+
+function getPkg (candidates, isFile, extensions, cb) {
   const candidate = candidates.shift()
   const pkgPath = join(candidate, 'package.json')
   isFile(pkgPath, (_, res) => {
@@ -111,7 +96,7 @@ function getPkg (candidates, isFile, cb) {
         })
       })
     }
-    if (candidates.length) getPkg(candidates, isFile, cb)
+    if (candidates.length) getPkg(candidates, isFile, extensions, cb)
   })
 }
 
@@ -154,3 +139,20 @@ const defaultIsDir = function isDirectory (dir, cb) {
     return cb(err)
   })
 }
+
+const notFoundError = (id, basedir) => {
+  const error = new Error(`Cannot find module '${id}' from '${basedir}'`)
+  error.code = 'MODULE_NOT_FOUND'
+  return error
+}
+
+const defaultExtensions = [
+  '',
+  '.js',
+  '.cjs',
+  '.mjs',
+  '.json',
+  '.bare',
+  '.node',
+  '.coffee'
+]

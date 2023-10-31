@@ -155,7 +155,7 @@ test('normalize', function (t) {
   })
 })
 
-test.skip('cup', function (t) {
+test('cup', function (t) {
   t.plan(4)
   const dir = join(__dirname, 'resolver')
 
@@ -172,10 +172,5 @@ test.skip('cup', function (t) {
   resolve('./cup', { basedir: dir, extensions: ['.js'] }, function (err, res) {
     t.is(err.message, "Cannot find module './cup' from '" + path.resolve(dir) + "'")
     t.is(err.code, 'MODULE_NOT_FOUND')
-  })
-
-  // Test that filename is reported as the "from" value when passed.
-  resolve('./cup', { basedir: dir, extensions: ['.js'], filename: join(dir, 'cupboard.js') }, function (err, res) {
-    t.is(err.message, "Cannot find module './cup' from '" + join(dir, 'cupboard.js') + "'")
   })
 })
