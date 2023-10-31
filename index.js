@@ -8,7 +8,8 @@ const extensions = [
   '.mjs',
   '.json',
   '.bare',
-  '.node'
+  '.node',
+  '.coffee'
 ]
 
 module.exports = (id, opts = {}, cb) => {

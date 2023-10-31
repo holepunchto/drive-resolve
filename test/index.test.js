@@ -1,4 +1,5 @@
 const { dirname, join } = require('path')
+const path = require('path')
 const test = require('brittle')
 const resolve = require('../index.js')
 
@@ -131,5 +132,50 @@ test('biz', function (t) {
   resolve('garply', { basedir: dir + '/tiv' }, function (err, res, pkg) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'garply/lib/index.js'))
+  })
+})
+
+test('quux', function (t) {
+  t.plan(1)
+  const dir = join(__dirname, 'resolver/quux')
+
+  resolve('./foo', { basedir: dir }, function (err, res, pkg) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'foo/index.js'))
+  })
+})
+
+test('normalize', function (t) {
+  t.plan(1)
+  const dir = join(__dirname, 'resolver/biz/node_modules/grux')
+
+  resolve('../grux', { basedir: dir }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'index.js'))
+  })
+})
+
+test.solo('cup', function (t) {
+  t.plan(4)
+  const dir = join(__dirname, 'resolver')
+
+  resolve('./cup', { basedir: dir, extensions: ['.js', '.coffee'] }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'cup.coffee'))
+  })
+
+  resolve('./cup.coffee', { basedir: dir }, function (err, res) {
+    if (err) t.fail(err)
+    t.is(res, join(dir, 'cup.coffee'))
+  })
+
+  resolve('./cup', { basedir: dir, extensions: ['.js'] }, function (err, res) {
+    t.is(err.message, "Cannot find module './cup' from '" + path.resolve(dir) + "'")
+    t.is(err.code, 'MODULE_NOT_FOUND')
+  })
+
+  // Test that filename is reported as the "from" value when passed.
+  resolve('./cup', { basedir: dir, extensions: ['.js'], filename: join(dir, 'cupboard.js') }, function (err, res) {
+    t.is(err.message, "Cannot find module './cup' from '" + join(dir, 'cupboard.js') + "'")
   })
 })
