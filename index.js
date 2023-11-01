@@ -4,7 +4,7 @@ const { dirname, join, basename, isAbsolute } = require('path')
 const fs = require('fs')
 
 module.exports = (id, opts = {}, cb) => {
-  const extensions = opts.extensions || defaultExtensions
+  const extensions = opts.extensions ? ['', ...opts.extensions] : defaultExtensions // always add empty extension
   const isFile = opts.isFile || defaultIsFile
   const isDir = opts.isDir || defaultIsDir
   const basedir = opts.basedir
