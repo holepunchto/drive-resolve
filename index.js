@@ -18,107 +18,107 @@ module.exports = (id, opts = {}, cb) => {
     isDir(path, (err, res) => {
       if (err) return cb(err)
       if (res) { // path is dir
-        resolveDir(id, basedir, path, isFile, [...extensions], cb)
+        resolveDir(path)
       } else { // path is file with or without extension
-        checkExtensions(path, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
+        checkExtensions(path, [...extensions], () => cb(throwNotFound(id, basedir)))
       }
     })
   } else { // id is not path
-    const dirs = getNodeModulesDirs(basedir)
+    const dirs = getNodeModulesDirs()
     const candidates = dirs.map(e => join(e, id))
-    resolveNodeModules(candidates, isFile, [...extensions], id, cb)
+    resolveNodeModules(candidates)
   }
-}
 
-function resolveDir (id, basedir, path, isFile, extensions, cb) {
-  getPackage(path, (pkg) => {
-    if (pkg) { // has package.json
-      const main = pkg.main || 'index.js'
-      resolveDirPackageMain(id, basedir, path, main, [...extensions], isFile, cb)
-    } else { // path is dir and doesnt have package.json
-      const index = join(path, 'index')
-      checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
-    }
-  })
-}
+  function resolveDir (path) {
+    getPackage(path, (pkg) => {
+      if (pkg) { // has package.json
+        const main = pkg.main || 'index.js'
+        resolveDirPackageMain(path, main)
+      } else { // path is dir and doesnt have package.json
+        const index = join(path, 'index')
+        checkExtensions(index, [...extensions], () => cb(throwNotFound(id, basedir)))
+      }
+    })
+  }
 
-function resolveNodeModules (candidates, isFile, extensions, id, cb) {
-  const candidate = candidates.shift()
-  const path = candidate
-  getPackage(path, (pkg) => {
-    if (pkg) { // has package.json
-      const main = pkg.main || 'index.js'
-      resolveModulePackageMain(id, path, main, [...extensions], candidates, candidate, isFile, cb)
-    } else { // path is dir and doesnt have package.json
-      const index = join(candidate, 'index')
-      const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
-      checkExtensions(index, [...extensions], cb, callback)
-    }
-  })
-}
-
-function resolveModulePackageMain (id, path, main, extensions, candidates, candidate, isFile, cb) {
-  isFile(join(path, main), (err, res) => {
-    if (err) return cb(err)
-    if (res) {
-      cb(null, join(path, main))
-    } else {
-      const index = join(path, 'index')
-      checkExtensions(index, [...extensions], cb, () => {
-        const index = join(candidate, main, 'index') // main is not a file, try finding the index
+  function resolveNodeModules (candidates) {
+    const candidate = candidates.shift()
+    const path = candidate
+    getPackage(path, (pkg) => {
+      if (pkg) { // has package.json
+        const main = pkg.main || 'index.js'
+        resolveModulePackageMain(id, path, main, [...extensions], candidates, candidate, isFile, cb)
+      } else { // path is dir and doesnt have package.json
+        const index = join(candidate, 'index')
         const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
-        checkExtensions(index, [...extensions], cb, callback)
-      })
-    }
-  })
-}
-
-function resolveDirPackageMain (id, basedir, path, main, extensions, isFile, cb) {
-  isFile(join(path, main), (err, res) => {
-    if (err) return cb(err)
-    if (res) {
-      cb(null, join(path, main))
-    } else {
-      const index = join(path, 'index')
-      checkExtensions(index, [...extensions], cb, () => {
-        const index = join(path, main, 'index')
-        checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
-      })
-    }
-  })
-}
-
-function checkExtensions (index, extensions, cb, notFound) {
-  if (extensions.length === 0) return notFound()
-  const current = index + extensions.shift()
-  defaultIsFile(current, (err, res) => {
-  // console.log('current', current, res)
-    if (err) return cb(err)
-    if (res) {
-      return cb(null, current)
-    } else {
-      checkExtensions(index, extensions, cb, notFound)
-    }
-  })
-}
-
-function getNodeModulesDirs (start) {
-  const dirs = []
-  const nodeModules = 'node_modules'
-
-  let dir = start
-  while (dir !== dirname(dir)) {
-    dirs.push(join(dir, nodeModules))
-    dir = dirname(dir)
+        checkExtensions(index, [...extensions], callback)
+      }
+    })
   }
-  return dirs
-}
 
-function getPackage (id, cb) {
-  fs.readFile(join(id, 'package.json'), (err, data) => {
-    if (!err) return cb(JSON.parse(data.toString()))
-    return cb(null)
-  })
+  function resolveModulePackageMain (id, path, main, extensions, candidates, candidate, isFile, cb) {
+    isFile(join(path, main), (err, res) => {
+      if (err) return cb(err)
+      if (res) {
+        cb(null, join(path, main))
+      } else {
+        const index = join(path, 'index')
+        checkExtensions(index, [...extensions], () => {
+          const index = join(candidate, main, 'index') // main is not a file, try finding the index
+          const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
+          checkExtensions(index, [...extensions], callback)
+        })
+      }
+    })
+  }
+
+  function resolveDirPackageMain (path, main) {
+    isFile(join(path, main), (err, res) => {
+      if (err) return cb(err)
+      if (res) {
+        cb(null, join(path, main))
+      } else {
+        const index = join(path, 'index')
+        checkExtensions(index, [...extensions], () => {
+          const index = join(path, main, 'index')
+          checkExtensions(index, [...extensions], () => cb(throwNotFound(id, basedir)))
+        })
+      }
+    })
+  }
+
+  function checkExtensions (index, extensions, fallback) {
+    if (extensions.length === 0) return fallback()
+    const current = index + extensions.shift()
+    isFile(current, (err, res) => {
+      // console.log('current', current, res)
+      if (err) return cb(err)
+      if (res) {
+        return cb(null, current)
+      } else {
+        checkExtensions(index, extensions, fallback)
+      }
+    })
+  }
+
+  function getNodeModulesDirs () {
+    const dirs = []
+    const nodeModules = 'node_modules'
+
+    let dir = basedir
+    while (dir !== dirname(dir)) {
+      dirs.push(join(dir, nodeModules))
+      dir = dirname(dir)
+    }
+    return dirs
+  }
+
+  function getPackage (path, cb) {
+    fs.readFile(join(path, 'package.json'), (err, data) => {
+      if (!err) return cb(JSON.parse(data.toString()))
+      return cb(null)
+    })
+  }
 }
 
 function defaultIsFile (file, cb) {
