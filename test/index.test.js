@@ -1,68 +1,82 @@
-const { dirname, join } = require('path')
+const { join } = require('path')
 const path = require('path')
 const test = require('brittle')
 const resolve = require('../index.js')
+const { createDriveFromDir } = require('./helpers/index.js')
 
-test('resolves absolute dir', (t) => {
+test('resolves absolute dir', async (t) => {
   t.plan(2)
-  const path = join(__dirname, '/fixtures/relative/path')
-  resolve(path, { basedir: __dirname }, (err, result) => {
+
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const id = '/fixtures/relative/path'
+  resolve(drive, id, (err, result) => {
     t.is(err, null)
-    t.is(result, join(path, 'index.js'))
+    t.is(result, join(id, 'index.js'))
   })
 })
 
-test('resolves absolute file', (t) => {
+test('resolves absolute file', async (t) => {
   t.plan(2)
-  const path = join(__dirname, '/fixtures/relative/path/index.js')
-  resolve(path, { basedir: __dirname }, (err, result) => {
+
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const id = '/fixtures/relative/path/index.js'
+  resolve(drive, id, (err, result) => {
     t.is(err, null)
-    t.is(result, path)
+    t.is(result, id)
   })
 })
 
-test('resolves relative path', (t) => {
+test('resolves relative path', async (t) => {
   t.plan(4)
+
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+
   {
-    const path = './fixtures/relative/path'
-    resolve(path, { basedir: __dirname }, (err, result) => {
+    const id = './fixtures/relative/path'
+    resolve(drive, id, (err, result) => {
       t.is(err, null)
-      t.is(result, join(dirname(__dirname), '/test/fixtures/relative/path/index.js'))
+      t.is(result, '/fixtures/relative/path/index.js')
     })
   }
   {
-    const path = '../test/fixtures/relative/path'
-    resolve(path, { basedir: __dirname }, (err, result) => {
+    const id = '../fixtures/relative/path'
+    resolve(drive, id, (err, result) => {
       t.is(err, null)
-      t.is(result, join(dirname(__dirname), '/test/fixtures/relative/path/index.js'))
+      t.is(result, '/fixtures/relative/path/index.js')
     })
   }
 })
 
-test('package.json main', (t) => {
+test('package.json main', async (t) => {
   t.plan(2)
-  const path = join(__dirname, '/fixtures/main')
-  resolve(path, { basedir: __dirname }, (err, result) => {
+
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const id = '/fixtures/main'
+  resolve(drive, id, (err, result) => {
     t.is(err, null)
-    t.is(result, join(path, 'main.js'))
+    t.is(result, join(id, 'main.js'))
   })
 })
 
-test('package.json main is folder', (t) => {
+test('package.json main is folder', async (t) => {
   t.plan(2)
-  const path = join(__dirname, '/fixtures/main-is-folder')
-  resolve(path, { basedir: __dirname }, (err, result) => {
+
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const id = '/fixtures/main-is-folder'
+  resolve(drive, id, (err, result) => {
     t.is(err, null)
-    t.is(result, join(path, '/lib/index.js'))
+    t.is(result, join(id, '/lib/index.js'))
   })
 })
 
-test('no extension', (t) => {
+test('no extension', async (t) => {
   t.plan(2)
-  const path = join(__dirname, '/fixtures/relative/path/index')
-  resolve(path, { basedir: __dirname }, (err, result) => {
+
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const id = '/fixtures/relative/path/index'
+  resolve(drive, id, (err, result) => {
     t.is(err, null)
-    t.is(result, path + '.js')
+    t.is(result, id + '.js')
   })
 })
 

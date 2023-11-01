@@ -24,6 +24,9 @@
   "devDependencies": {
     "acorn": "^8.11.2",
     "brittle": "^3.3.2",
+    "corestore": "^6.15.10",
+    "hyperdrive": "^11.6.1",
+    "random-access-memory": "^6.2.0",
     "standard": "^17.1.0"
   },
   "standard": {

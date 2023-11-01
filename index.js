@@ -1,13 +1,18 @@
 'use strict'
 
 const { dirname, join, basename, isAbsolute } = require('path')
-const fs = require('fs')
 
-module.exports = (id, opts = {}, cb) => {
+module.exports = (drive, id, opts = {}, cb) => {
+  if (typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
   const extensions = opts.extensions ? ['', ...opts.extensions] : defaultExtensions // always add empty extension
   const isFile = opts.isFile || defaultIsFile
   const isDir = opts.isDir || defaultIsDir
-  const basedir = opts.basedir
+  const readFile = opts.readFile || defaultReadFile
+  const basedir = opts.basedir || '/'
+
   if (id !== basename(id)) { // is path
     let path = ''
     if (isAbsolute(id)) {
@@ -91,7 +96,6 @@ module.exports = (id, opts = {}, cb) => {
     if (extensions.length === 0) return fallback()
     const current = index + extensions.shift()
     isFile(current, (err, res) => {
-      // console.log('current', current, res)
       if (err) return cb(err)
       if (res) {
         return cb(null, current)
@@ -114,31 +118,30 @@ module.exports = (id, opts = {}, cb) => {
   }
 
   function getPackage (path, cb) {
-    fs.readFile(join(path, 'package.json'), (err, data) => {
-      if (!err) return cb(JSON.parse(data.toString()))
+    readFile(join(path, 'package.json'), (err, data) => {
+      if (!err && data) return cb(JSON.parse(data.toString())) // TODO check is well-formed
       return cb(null)
     })
   }
-}
 
-function defaultIsFile (file, cb) {
-  fs.stat(file, function (err, stat) {
-    if (!err) {
-      return cb(null, stat.isFile() || stat.isFIFO())
-    }
-    if (err.code === 'ENOENT' || err.code === 'ENOTDIR') return cb(null, false)
-    return cb(err)
-  })
-}
+  function defaultIsFile (file, cb) {
+    drive.entry(file).then((node) => {
+      cb(null, node !== null && !!(node.value && node.value.blob))
+    })
+  }
 
-function defaultIsDir (dir, cb) {
-  fs.stat(dir, function (err, stat) {
-    if (!err) {
-      return cb(null, stat.isDirectory())
-    }
-    if (err.code === 'ENOENT' || err.code === 'ENOTDIR') return cb(null, false)
-    return cb(err)
-  })
+  function defaultIsDir (dir, cb) {
+    const ite = drive.readdir(dir)[Symbol.asyncIterator]()
+    ite.next().then(({ value }) => {
+      cb(null, value !== null)
+    })
+  }
+
+  function defaultReadFile (file, cb) {
+    drive.get(file).then((res) => {
+      cb(null, res)
+    })
+  }
 }
 
 function throwNotFound (id, basedir) {
