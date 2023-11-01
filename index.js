@@ -160,6 +160,5 @@ const defaultExtensions = [
   '.mjs',
   '.json',
   '.bare',
-  '.node',
-  '.coffee'
+  '.node'
 ]
