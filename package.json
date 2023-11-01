@@ -21,7 +21,8 @@
     "url": "https://github.com/holepunchto/resolve-bare/issues"
   },
   "homepage": "https://github.com/holepunchto/resolve-bare#readme",
-  "dependencies": {
+  "devDependencies": {
+    "acorn": "^8.11.2",
     "brittle": "^3.3.2",
     "standard": "^17.1.0"
   },
