@@ -18,7 +18,7 @@ module.exports = (id, opts = {}, cb) => {
     isDir(path, (err, res) => {
       if (err) return cb(err)
       if (res) { // path is dir
-        resolveDir(id, basedir, path, isFile, extensions, cb)
+        resolveDir(id, basedir, path, isFile, [...extensions], cb)
       } else { // path is file with or without extension
         checkExtensions(path, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
       }
@@ -34,12 +34,7 @@ function resolveDir (id, basedir, path, isFile, extensions, cb) {
   getPackage(path, (pkg) => {
     if (pkg) { // has package.json
       const main = pkg.main || 'index.js'
-      if (main === basename(main)) { // main is file
-        resolvePackageMain(path, main, [...extensions], isFile, cb)
-      } else { // main is dir
-        const index = join(path, main, 'index')
-        checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
-      }
+      resolveDirPackageMain(id, basedir, path, main, [...extensions], isFile, cb)
     } else { // path is dir and doesnt have package.json
       const index = join(path, 'index')
       checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
@@ -53,13 +48,7 @@ function resolveNodeModules (candidates, isFile, extensions, id, cb) {
   getPackage(path, (pkg) => {
     if (pkg) { // has package.json
       const main = pkg.main || 'index.js'
-      if (main === basename(main)) { // main is file
-        resolvePackageMain(path, main, [...extensions], isFile, cb)
-      } else { // main is dir
-        const index = join(candidate, main, 'index')
-        const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
-        checkExtensions(index, [...extensions], cb, callback)
-      }
+      resolveModulePackageMain(id, path, main, [...extensions], candidates, candidate, isFile, cb)
     } else { // path is dir and doesnt have package.json
       const index = join(candidate, 'index')
       const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
@@ -68,15 +57,33 @@ function resolveNodeModules (candidates, isFile, extensions, id, cb) {
   })
 }
 
-function resolvePackageMain (path, main, extensions, isFile, cb) {
+function resolveModulePackageMain (id, path, main, extensions, candidates, candidate, isFile, cb) {
   isFile(join(path, main), (err, res) => {
     if (err) return cb(err)
     if (res) {
       cb(null, join(path, main))
     } else {
-      // TODO throw error here (main does not exist and no index.js)
       const index = join(path, 'index')
-      checkExtensions(index, [...extensions], cb, () => cb(throwIncorrectPackageMain()))
+      checkExtensions(index, [...extensions], cb, () => {
+        const index = join(candidate, main, 'index') // main is not a file, try finding the index
+        const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
+        checkExtensions(index, [...extensions], cb, callback)
+      })
+    }
+  })
+}
+
+function resolveDirPackageMain (id, basedir, path, main, extensions, isFile, cb) {
+  isFile(join(path, main), (err, res) => {
+    if (err) return cb(err)
+    if (res) {
+      cb(null, join(path, main))
+    } else {
+      const index = join(path, 'index')
+      checkExtensions(index, [...extensions], cb, () => {
+        const index = join(path, main, 'index')
+        checkExtensions(index, [...extensions], cb, () => cb(throwNotFound(id, basedir)))
+      })
     }
   })
 }
@@ -85,6 +92,7 @@ function checkExtensions (index, extensions, cb, notFound) {
   if (extensions.length === 0) return notFound()
   const current = index + extensions.shift()
   defaultIsFile(current, (err, res) => {
+  // console.log('current', current, res)
     if (err) return cb(err)
     if (res) {
       return cb(null, current)
@@ -99,7 +107,6 @@ function getNodeModulesDirs (start) {
   const nodeModules = 'node_modules'
 
   let dir = start
-
   while (dir !== dirname(dir)) {
     dirs.push(join(dir, nodeModules))
     dir = dirname(dir)
@@ -143,12 +150,6 @@ function throwNotFound (id, basedir) {
 function throwModuleNotFound (id, basedir) {
   const error = new Error(`Cannot find module '${id}'`)
   error.code = 'MODULE_NOT_FOUND'
-  return error
-}
-
-function throwIncorrectPackageMain () {
-  const error = new Error()
-  error.code = 'INCORRECT_PACKAGE_MAIN'
   return error
 }
 

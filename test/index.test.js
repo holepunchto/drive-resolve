@@ -225,7 +225,7 @@ test('missing index', function (t) {
   const resolverDir = join(__dirname, 'resolver')
   resolve('./missing_index', { basedir: resolverDir }, function (err, res, pkg) {
     t.ok(err instanceof Error)
-    t.is(err && err.code, 'INCORRECT_PACKAGE_MAIN', 'error has correct error code')
+    t.is(err && err.code, 'MODULE_NOT_FOUND', 'error has correct error code')
   })
 })
 
@@ -250,5 +250,21 @@ test('null main', function (t) {
   resolve('./null_main', { basedir: resolverDir }, function (err, res, pkg) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'index.js'))
+  })
+})
+
+test('resolve brittle', (t) => {
+  t.plan(2)
+  resolve('brittle', { basedir: __dirname }, (err, result) => {
+    t.is(err, null)
+    t.is(result, join(path.dirname(__dirname), 'node_modules', 'brittle', 'index.js'))
+  })
+})
+
+test('resolve acorn', (t) => {
+  t.plan(2)
+  resolve('acorn', { basedir: __dirname }, (err, result) => {
+    t.is(err, null)
+    t.is(result, join(path.dirname(__dirname), 'node_modules', 'acorn', 'dist', 'acorn.js'))
   })
 })
