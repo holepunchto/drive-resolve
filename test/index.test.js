@@ -80,205 +80,211 @@ test('no extension', async (t) => {
   })
 })
 
-test('async foo', (t) => {
+test('async foo', async (t) => {
   t.plan(2)
-  const dir = join(__dirname, 'resolver')
 
-  resolve('./foo', { basedir: dir }, function (err, res) {
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const dir = '/fixtures/resolver'
+
+  resolve(drive, './foo', { basedir: dir }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'foo.js'))
   })
 
-  resolve('./foo.js', { basedir: dir }, function (err, res) {
+  resolve(drive, './foo.js', { basedir: dir }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'foo.js'))
   })
 })
 
-test('bar', function (t) {
+test('bar', async (t) => {
   t.plan(1)
-  const dir = join(__dirname, 'resolver')
-  resolve('foo', { basedir: dir + '/bar' }, function (err, res, pkg) {
+
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const dir = '/fixtures/resolver'
+
+  resolve(drive, 'foo', { basedir: dir + '/bar' }, function (err, res, pkg) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'bar/node_modules/foo/index.js'))
   })
 })
 
-test('baz', function (t) {
+test('baz', async (t) => {
   t.plan(1)
-  const dir = join(__dirname, 'resolver')
 
-  resolve('./baz', { basedir: dir }, function (err, res) {
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const dir = '/fixtures/resolver'
+
+  resolve(drive, './baz', { basedir: dir }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'baz/quux.js'))
   })
 })
 
-test('biz', function (t) {
+test('biz', async (t) => {
   t.plan(6)
-  const dir = join(__dirname, 'resolver/biz/node_modules')
 
-  resolve('./grux', { basedir: dir }, function (err, res, pkg) {
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const dir = '/fixtures/resolver/biz/node_modules'
+
+  resolve(drive, './grux', { basedir: dir }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'grux/index.js'))
   })
 
-  resolve('./garply', { basedir: dir }, function (err, res, pkg) {
+  resolve(drive, './garply', { basedir: dir }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'garply/lib/index.js'))
   })
 
-  resolve('tiv', { basedir: dir + '/grux' }, function (err, res, pkg) {
+  resolve(drive, 'tiv', { basedir: dir + '/grux' }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'tiv/index.js'))
   })
 
-  resolve('tiv', { basedir: dir + '/garply' }, function (err, res, pkg) {
+  resolve(drive, 'tiv', { basedir: dir + '/garply' }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'tiv/index.js'))
   })
 
-  resolve('grux', { basedir: dir + '/tiv' }, function (err, res, pkg) {
+  resolve(drive, 'grux', { basedir: dir + '/tiv' }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'grux/index.js'))
   })
 
-  resolve('garply', { basedir: dir + '/tiv' }, function (err, res, pkg) {
+  resolve(drive, 'garply', { basedir: dir + '/tiv' }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'garply/lib/index.js'))
   })
 })
 
-test('quux', function (t) {
+test('quux', async (t) => {
   t.plan(1)
-  const dir = join(__dirname, 'resolver/quux')
 
-  resolve('./foo', { basedir: dir }, function (err, res, pkg) {
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const dir = '/fixtures/resolver/quux'
+
+  resolve(drive, './foo', { basedir: dir }, function (err, res, pkg) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'foo/index.js'))
   })
 })
 
-test('normalize', function (t) {
+test('normalize', async (t) => {
   t.plan(1)
-  const dir = join(__dirname, 'resolver/biz/node_modules/grux')
 
-  resolve('../grux', { basedir: dir }, function (err, res) {
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const dir = '/fixtures/resolver/biz/node_modules/grux'
+
+  resolve(drive, '../grux', { basedir: dir }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'index.js'))
   })
 })
 
-test('cup', function (t) {
+test('cup', async (t) => {
   t.plan(4)
-  const dir = join(__dirname, 'resolver')
 
-  resolve('./cup', { basedir: dir, extensions: ['.js', '.coffee'] }, function (err, res) {
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const dir = '/fixtures/resolver'
+
+  resolve(drive, './cup', { basedir: dir, extensions: ['.js', '.coffee'] }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'cup.coffee'))
   })
 
-  resolve('./cup.coffee', { basedir: dir }, function (err, res) {
+  resolve(drive, './cup.coffee', { basedir: dir }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'cup.coffee'))
   })
 
-  resolve('./cup', { basedir: dir, extensions: ['.js'] }, function (err, res) {
+  resolve(drive, './cup', { basedir: dir, extensions: ['.js'] }, function (err, res) {
     t.is(err.message, "Cannot find module './cup' from '" + path.resolve(dir) + "'")
     t.is(err.code, 'MODULE_NOT_FOUND')
   })
 })
 
-test('mug', function (t) {
+test('mug', async (t) => {
   t.plan(3)
-  const dir = join(__dirname, 'resolver')
 
-  resolve('./mug', { basedir: dir }, function (err, res) {
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const dir = '/fixtures/resolver'
+
+  resolve(drive, './mug', { basedir: dir }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'mug.js'))
   })
 
-  resolve('./mug', { basedir: dir, extensions: ['.coffee', '.js'] }, function (err, res) {
+  resolve(drive, './mug', { basedir: dir, extensions: ['.coffee', '.js'] }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, '/mug.coffee'))
   })
 
-  resolve('./mug', { basedir: dir, extensions: ['.js', '.coffee'] }, function (err, res) {
+  resolve(drive, './mug', { basedir: dir, extensions: ['.js', '.coffee'] }, function (err, res) {
     if (err) t.fail(err)
     t.is(res, join(dir, '/mug.js'))
   })
 })
 
-test('empty main', function (t) {
+test('empty main', async (t) => {
   t.plan(1)
 
-  const resolverDir = join(__dirname, 'resolver')
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const resolverDir = '/fixtures/resolver'
   const dir = join(resolverDir, 'empty_main')
 
-  resolve('./empty_main', { basedir: resolverDir }, function (err, res, pkg) {
+  resolve(drive, './empty_main', { basedir: resolverDir }, function (err, res, pkg) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'index.js'))
   })
 })
 
-test('incorrect main', function (t) {
+test('incorrect main', async (t) => {
   t.plan(1)
 
-  const resolverDir = join(__dirname, 'resolver')
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const resolverDir = '/fixtures/resolver'
   const dir = join(resolverDir, 'incorrect_main')
 
-  resolve('./incorrect_main', { basedir: resolverDir }, function (err, res, pkg) {
+  resolve(drive, './incorrect_main', { basedir: resolverDir }, function (err, res, pkg) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'index.js'))
   })
 })
 
-test('missing index', function (t) {
+test('missing index', async (t) => {
   t.plan(2)
 
-  const resolverDir = join(__dirname, 'resolver')
-  resolve('./missing_index', { basedir: resolverDir }, function (err, res, pkg) {
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const resolverDir = '/fixtures/resolver'
+  resolve(drive, './missing_index', { basedir: resolverDir }, function (err, res, pkg) {
     t.ok(err instanceof Error)
     t.is(err && err.code, 'MODULE_NOT_FOUND', 'error has correct error code')
   })
 })
 
-test('missing main', function (t) {
+test('missing main', async (t) => {
   t.plan(1)
 
-  const resolverDir = join(__dirname, 'resolver')
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const resolverDir = '/fixtures/resolver'
   const dir = join(resolverDir, 'missing_main')
 
-  resolve('./missing_main', { basedir: resolverDir }, function (err, res, pkg) {
+  resolve(drive, './missing_main', { basedir: resolverDir }, function (err, res, pkg) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'index.js'))
   })
 })
 
-test('null main', function (t) {
+test('null main', async (t) => {
   t.plan(1)
 
-  const resolverDir = join(__dirname, 'resolver')
+  const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
+  const resolverDir = '/fixtures/resolver'
   const dir = join(resolverDir, 'null_main')
 
-  resolve('./null_main', { basedir: resolverDir }, function (err, res, pkg) {
+  resolve(drive, './null_main', { basedir: resolverDir }, function (err, res, pkg) {
     if (err) t.fail(err)
     t.is(res, join(dir, 'index.js'))
-  })
-})
-
-test('resolve brittle', (t) => {
-  t.plan(2)
-  resolve('brittle', { basedir: __dirname }, (err, result) => {
-    t.is(err, null)
-    t.is(result, join(path.dirname(__dirname), 'node_modules', 'brittle', 'index.js'))
-  })
-})
-
-test('resolve acorn', (t) => {
-  t.plan(2)
-  resolve('acorn', { basedir: __dirname }, (err, result) => {
-    t.is(err, null)
-    t.is(result, join(path.dirname(__dirname), 'node_modules', 'acorn', 'dist', 'acorn.js'))
   })
 })
