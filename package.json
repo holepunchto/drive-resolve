@@ -1,6 +1,6 @@
 {
   "name": "@holepunchto/drive-resolve",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -32,5 +32,8 @@
     "ignore": [
       "test/fixtures/*"
     ]
+  },
+  "dependencies": {
+    "exports-map": "^1.0.2"
   }
 }

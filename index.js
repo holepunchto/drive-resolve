@@ -1,5 +1,6 @@
 'use strict'
 
+const em = require('exports-map')
 const { dirname, join, basename, isAbsolute } = require('path')
 
 module.exports = (drive, id, opts = {}, cb) => {
@@ -10,6 +11,7 @@ module.exports = (drive, id, opts = {}, cb) => {
 
   const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js'] // always add empty extension
   const basedir = opts.basedir || '/'
+  const runtimes = opts.runtimes
 
   if (id !== basename(id) && id[0] !== '@') { // is path
     let path = ''
@@ -33,7 +35,8 @@ module.exports = (drive, id, opts = {}, cb) => {
   }
 
   function resolveDir (path) {
-    getPackage(path, (pkg) => {
+    getPackage(path, (err, pkg) => {
+      if (err) return cb(err)
       if (pkg) { // has package.json
         const main = pkg.main || 'index.js'
         resolveDirPackageMain(path, main)
@@ -47,7 +50,8 @@ module.exports = (drive, id, opts = {}, cb) => {
   function resolveNodeModules (candidates) {
     const candidate = candidates.shift()
     const path = candidate
-    getPackage(path, (pkg) => {
+    getPackage(path, (err, pkg) => {
+      if (err) return cb(err)
       if (pkg) { // has package.json
         const main = pkg.main || 'index.js'
         resolveModulePackageMain(path, main, candidates, candidate)
@@ -117,8 +121,16 @@ module.exports = (drive, id, opts = {}, cb) => {
 
   function getPackage (path, cb) {
     readFile(join(path, 'package.json'), (err, data) => {
-      if (!err && data) return cb(JSON.parse(data.toString())) // TODO check is well-formed
-      return cb(null)
+      if (err) return cb(err)
+      if (!err && data) {
+        const pkg = JSON.parse(data.toString())
+        if (!pkg.exports || !runtimes) return cb(null, pkg)
+        const main = em(pkg.exports, runtimes, '.')
+        if (main) pkg.main = main
+        cb(null, pkg)
+      } else {
+        return cb(null)
+      }
     })
   }
 
