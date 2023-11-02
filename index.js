@@ -50,16 +50,16 @@ module.exports = (drive, id, opts = {}, cb) => {
     getPackage(path, (pkg) => {
       if (pkg) { // has package.json
         const main = pkg.main || 'index.js'
-        resolveModulePackageMain(id, path, main, [...extensions], candidates, candidate, isFile, cb)
+        resolveModulePackageMain(path, main, candidates, candidate)
       } else { // module doesnt have package.json
         const index = join(candidate, 'index')
-        const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound())
-        checkExtensions(index, [...extensions], callback)
+        const fallback = candidates.length ? () => resolveNodeModules(candidates) : () => cb(throwModuleNotFound())
+        checkExtensions(index, [...extensions], fallback)
       }
     })
   }
 
-  function resolveModulePackageMain (id, path, main, extensions, candidates, candidate, isFile, cb) {
+  function resolveModulePackageMain (path, main, candidates, candidate) {
     isFile(join(path, main), (err, res) => {
       if (err) return cb(err)
       if (res) {
@@ -68,7 +68,7 @@ module.exports = (drive, id, opts = {}, cb) => {
         const index = join(path, 'index')
         checkExtensions(index, [...extensions], () => {
           const index = join(candidate, main, 'index') // main is not a file, try finding the index
-          const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound())
+          const callback = candidates.length ? () => resolveNodeModules(candidates) : () => cb(throwModuleNotFound())
           checkExtensions(index, [...extensions], callback)
         })
       }
