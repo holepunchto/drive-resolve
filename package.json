@@ -1,6 +1,6 @@
 {
   "name": "@holepunchto/drive-resolve",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/holepunchto/resolve#readme",
   "devDependencies": {
-    "acorn": "^8.11.2",
     "brittle": "^3.3.2",
     "corestore": "^6.15.10",
     "hyperdrive": "^11.6.1",
