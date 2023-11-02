@@ -1,5 +1,9 @@
 # @Holepunchto/resolve
 
+``` 
+npm install @holepunch/drive-resolve
+``` 
+
 Synchronous require resolution in [Hyperdrive](https://github.com/holepunchto/hyperdrive).
 
 ## Usage
