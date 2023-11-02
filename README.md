@@ -25,10 +25,7 @@ resolve(drive, 'bar, (err, res) => {
 ``` javascript
 {
   basedir: string, // directory to begin resolving from
-  extensions: [], // array of extensions to search
-  isFile: (file, callback) => {}, // synchronous check if file exists
-  isDir: (dir, callback) => {}, // synchronous check if dir exists
-  readFile: (file, callback) => {} // synchronous read file
+  extensions: []   // array of extensions to search
 }
 ```
 
