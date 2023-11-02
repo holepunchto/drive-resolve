@@ -7,10 +7,8 @@ module.exports = (drive, id, opts = {}, cb) => {
     cb = opts
     opts = {}
   }
-  const extensions = opts.extensions ? ['', ...opts.extensions] : defaultExtensions // always add empty extension
-  const isFile = opts.isFile || defaultIsFile
-  const isDir = opts.isDir || defaultIsDir
-  const readFile = opts.readFile || defaultReadFile
+
+  const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js'] // always add empty extension
   const basedir = opts.basedir || '/'
 
   if (id !== basename(id)) { // is path
@@ -25,7 +23,7 @@ module.exports = (drive, id, opts = {}, cb) => {
       if (res) { // path is dir
         resolveDir(path)
       } else { // path is file with or without extension
-        checkExtensions(path, [...extensions], () => cb(throwNotFound(id, basedir)))
+        checkExtensions(path, [...extensions], () => cb(throwNotFound()))
       }
     })
   } else { // id is not path
@@ -39,9 +37,9 @@ module.exports = (drive, id, opts = {}, cb) => {
       if (pkg) { // has package.json
         const main = pkg.main || 'index.js'
         resolveDirPackageMain(path, main)
-      } else { // path is dir and doesnt have package.json
+      } else { // dir doesnt have package.json
         const index = join(path, 'index')
-        checkExtensions(index, [...extensions], () => cb(throwNotFound(id, basedir)))
+        checkExtensions(index, [...extensions], () => cb(throwNotFound()))
       }
     })
   }
@@ -53,9 +51,9 @@ module.exports = (drive, id, opts = {}, cb) => {
       if (pkg) { // has package.json
         const main = pkg.main || 'index.js'
         resolveModulePackageMain(id, path, main, [...extensions], candidates, candidate, isFile, cb)
-      } else { // path is dir and doesnt have package.json
+      } else { // module doesnt have package.json
         const index = join(candidate, 'index')
-        const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
+        const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound())
         checkExtensions(index, [...extensions], callback)
       }
     })
@@ -70,7 +68,7 @@ module.exports = (drive, id, opts = {}, cb) => {
         const index = join(path, 'index')
         checkExtensions(index, [...extensions], () => {
           const index = join(candidate, main, 'index') // main is not a file, try finding the index
-          const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound(id))
+          const callback = candidates.length ? () => resolveNodeModules(candidates, isFile, [...extensions], id, cb) : () => cb(throwModuleNotFound())
           checkExtensions(index, [...extensions], callback)
         })
       }
@@ -124,44 +122,34 @@ module.exports = (drive, id, opts = {}, cb) => {
     })
   }
 
-  function defaultIsFile (file, cb) {
+  function isFile (file, cb) {
     drive.entry(file).then((node) => {
       cb(null, node !== null && !!(node.value && node.value.blob))
     })
   }
 
-  function defaultIsDir (dir, cb) {
+  function isDir (dir, cb) {
     const ite = drive.readdir(dir)[Symbol.asyncIterator]()
     ite.next().then(({ value }) => {
       cb(null, value !== null)
     })
   }
 
-  function defaultReadFile (file, cb) {
+  function readFile (file, cb) {
     drive.get(file).then((res) => {
       cb(null, res)
     })
   }
-}
 
-function throwNotFound (id, basedir) {
-  const error = new Error(`Cannot find module '${id}' from '${basedir}'`)
-  error.code = 'MODULE_NOT_FOUND'
-  return error
-}
+  function throwNotFound () {
+    const error = new Error(`Cannot find module '${id}' from '${basedir}'`)
+    error.code = 'MODULE_NOT_FOUND'
+    return error
+  }
 
-function throwModuleNotFound (id, basedir) {
-  const error = new Error(`Cannot find module '${id}'`)
-  error.code = 'MODULE_NOT_FOUND'
-  return error
+  function throwModuleNotFound () {
+    const error = new Error(`Cannot find module '${id}'`)
+    error.code = 'MODULE_NOT_FOUND'
+    return error
+  }
 }
-
-const defaultExtensions = [
-  '',
-  '.js',
-  '.cjs',
-  '.mjs',
-  '.json',
-  '.bare',
-  '.node'
-]
