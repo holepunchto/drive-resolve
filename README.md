@@ -4,7 +4,7 @@ Synchronous require resolution in [Hyperdrive](https://github.com/holepunchto/hy
 
 ## Usage
 
-```
+``` javascript
 const resolve = require('@holepunchto/resolve')
 resolve(drive, 'bar, (err, res) => {
   console.log(err) // /node_modules/bar/index.js
@@ -18,7 +18,7 @@ resolve(drive, 'bar, (err, res) => {
 
 `options` include:
 
-```
+``` javascript
 {
   basedir: string, // directory to begin resolving from
   extensions: [], // array of extensions to search
