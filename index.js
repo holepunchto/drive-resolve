@@ -8,6 +8,7 @@ module.exports = (drive, id, opts = {}, cb) => {
     opts = {}
   }
 
+  const readFile = opts.readFile || defaultReadFile
   const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js'] // always add empty extension
   const basedir = opts.basedir || '/'
 
@@ -125,20 +126,20 @@ module.exports = (drive, id, opts = {}, cb) => {
   function isFile (file, cb) {
     drive.entry(file).then((node) => {
       cb(null, node !== null && !!(node.value && node.value.blob))
-    })
+    }, cb)
   }
 
   function isDir (dir, cb) {
     const ite = drive.readdir(dir)[Symbol.asyncIterator]()
     ite.next().then(({ value }) => {
-      cb(null, value !== null)
+      cb(null, !!value)
     })
   }
 
-  function readFile (file, cb) {
+  function defaultReadFile (file, cb) {
     drive.get(file).then((res) => {
       cb(null, res)
-    })
+    }, cb)
   }
 
   function throwNotFound () {
