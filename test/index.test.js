@@ -69,7 +69,7 @@ test('package.json main is folder', async (t) => {
   })
 })
 
-test('no extension', async (t) => {
+test('resolves without extension', async (t) => {
   t.plan(2)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -80,7 +80,7 @@ test('no extension', async (t) => {
   })
 })
 
-test('async foo', async (t) => {
+test('resolves relative path with/without extension', async (t) => {
   t.plan(2)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -97,7 +97,7 @@ test('async foo', async (t) => {
   })
 })
 
-test('bar', async (t) => {
+test('resolves by module name from basedir', async (t) => {
   t.plan(1)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -109,7 +109,7 @@ test('bar', async (t) => {
   })
 })
 
-test('baz', async (t) => {
+test('resolves main with relative path', async (t) => {
   t.plan(1)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -121,7 +121,7 @@ test('baz', async (t) => {
   })
 })
 
-test('biz', async (t) => {
+test('resolves to parent node_modules with module name and relative path', async (t) => {
   t.plan(6)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -158,7 +158,7 @@ test('biz', async (t) => {
   })
 })
 
-test('quux', async (t) => {
+test('resolves without package.json', async (t) => {
   t.plan(1)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -170,7 +170,7 @@ test('quux', async (t) => {
   })
 })
 
-test('normalize', async (t) => {
+test('resolves using parent folder path', async (t) => {
   t.plan(1)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -182,7 +182,7 @@ test('normalize', async (t) => {
   })
 })
 
-test('cup', async (t) => {
+test('custom extension and opts.extensions work', async (t) => {
   t.plan(4)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -204,7 +204,7 @@ test('cup', async (t) => {
   })
 })
 
-test('mug', async (t) => {
+test('by default resolves to .js extension unless specified in opts.extensions', async (t) => {
   t.plan(3)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -226,7 +226,7 @@ test('mug', async (t) => {
   })
 })
 
-test('empty main', async (t) => {
+test('resolves to index.js when main is empty', async (t) => {
   t.plan(1)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -239,7 +239,7 @@ test('empty main', async (t) => {
   })
 })
 
-test('incorrect main', async (t) => {
+test('resolves to index.js when main is incorrect', async (t) => {
   t.plan(1)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -252,7 +252,7 @@ test('incorrect main', async (t) => {
   })
 })
 
-test('missing index', async (t) => {
+test('returns error if index is missing', async (t) => {
   t.plan(2)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -263,7 +263,7 @@ test('missing index', async (t) => {
   })
 })
 
-test('missing main', async (t) => {
+test('resolves to index.js if no main in package.json', async (t) => {
   t.plan(1)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
@@ -276,7 +276,7 @@ test('missing main', async (t) => {
   })
 })
 
-test('null main', async (t) => {
+test('resolves to index.js if main is null in package.json', async (t) => {
   t.plan(1)
 
   const drive = await createDriveFromDir(join(__dirname, 'fixtures'))
