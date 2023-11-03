@@ -18,7 +18,7 @@ module.exports = async (drive, id, opts = {}) => {
     if (await isDirectory(path)) {
       return (await resolveDirectory(path)) || throwModuleNotFound()
     } else {
-      return (await checkExtensions(path, [...extensions])) || throwModuleNotFound()
+      return (await resolveFile(path, [...extensions])) || throwModuleNotFound()
     }
   } else {
     const dirs = getNodeModulesDirs()
@@ -33,7 +33,7 @@ module.exports = async (drive, id, opts = {}) => {
       return resolveDirPackageMain(path, main)
     } else {
       const index = join(path, 'index')
-      return checkExtensions(index, [...extensions])
+      return resolveFile(index, [...extensions])
     }
   }
 
@@ -47,7 +47,7 @@ module.exports = async (drive, id, opts = {}) => {
       return resolveModulePackageMain(path, main, candidates, candidate)
     } else {
       const index = join(candidate, 'index')
-      return (await checkExtensions(index)) || (await resolveNodeModules(candidates))
+      return (await resolveFile(index)) || (await resolveNodeModules(candidates))
     }
   }
 
@@ -55,7 +55,7 @@ module.exports = async (drive, id, opts = {}) => {
     if (await isFile(join(path, main))) {
       return join(path, main)
     } else {
-      return (await checkExtensions(join(path, 'index'))) || (await checkExtensions(join(path, main, 'index')))
+      return (await resolveFile(join(path, 'index'))) || (await resolveFile(join(path, main, 'index')))
     }
   }
 
@@ -63,11 +63,11 @@ module.exports = async (drive, id, opts = {}) => {
     if (await isFile(join(path, main))) {
       return join(path, main)
     } else {
-      return (await checkExtensions(join(path, 'index'))) || (await checkExtensions(join(path, main, 'index')))
+      return (await resolveFile(join(path, 'index'))) || (await resolveFile(join(path, main, 'index')))
     }
   }
 
-  async function checkExtensions (index) {
+  async function resolveFile (index) {
     const files = await Promise.all(extensions.map(async e => {
       return (await isFile(index + e)) ? index + e : null
     }))
