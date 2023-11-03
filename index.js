@@ -30,7 +30,7 @@ module.exports = async (drive, id, opts = {}) => {
     const pkg = await getPackage(path)
     if (pkg) {
       const main = pkg.main || 'index.js'
-      return resolveDirPackageMain(path, main)
+      return resolvePackageMain(path, main)
     } else {
       const index = join(path, 'index')
       return resolveFile(index, [...extensions])
@@ -44,26 +44,18 @@ module.exports = async (drive, id, opts = {}) => {
     const pkg = await getPackage(path)
     if (pkg) {
       const main = pkg.main || 'index.js'
-      return resolveModulePackageMain(path, main, candidates, candidate)
+      return resolvePackageMain(path, main, candidates, candidate)
     } else {
       const index = join(candidate, 'index')
       return (await resolveFile(index)) || (await resolveNodeModules(candidates))
     }
   }
 
-  async function resolveModulePackageMain (path, main, candidates, candidate) {
+  async function resolvePackageMain (path, main, candidates, candidate) {
     if (await isFile(join(path, main))) {
       return join(path, main)
     } else {
-      return (await resolveFile(join(path, 'index'))) || (await resolveFile(join(path, main, 'index')))
-    }
-  }
-
-  async function resolveDirPackageMain (path, main) {
-    if (await isFile(join(path, main))) {
-      return join(path, main)
-    } else {
-      return (await resolveFile(join(path, 'index'))) || (await resolveFile(join(path, main, 'index')))
+      return (await resolveFile(join(path, main, 'index'))) || (await resolveFile(join(path, 'index')))
     }
   }
 
