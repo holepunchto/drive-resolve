@@ -1,14 +1,14 @@
 'use strict'
 
 const em = require('exports-map')
-const { dirname, join, basename, isAbsolute } = require('path')
+const { dirname, join, isAbsolute } = require('path')
 
 module.exports = async (drive, id, opts = {}) => {
   const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js'] // always add empty extension
   const basedir = opts.basedir || '/'
   const runtimes = opts.runtimes
 
-  if (id !== basename(id) && id[0] !== '@') { // is path
+  if (id[0] === '/' || id[0] === '.') { // is path
     let path = ''
     if (isAbsolute(id)) {
       path = id
@@ -23,7 +23,7 @@ module.exports = async (drive, id, opts = {}) => {
   } else {
     const dirs = getNodeModulesDirs()
     const candidates = dirs.map(e => join(e, id))
-    return (await resolveNodeModules(candidates)) || throwModuleNotFound()
+    return (await resolveNodeModulesFile(candidates)) || (await resolveNodeModules(candidates)) || throwModuleNotFound()
   }
 
   async function resolveDirectory (path) {
@@ -59,6 +59,8 @@ module.exports = async (drive, id, opts = {}) => {
     }
   }
 
+  // TODO this is not deterministic in case of node_modules and node_modules of parent have the same module, make it sequencial
+
   async function resolveFile (index) {
     const files = await Promise.all(extensions.map(async e => {
       return (await isFile(index + e)) ? index + e : null
@@ -66,13 +68,21 @@ module.exports = async (drive, id, opts = {}) => {
     return files.find(e => e !== null)
   }
 
+  async function resolveNodeModulesFile (candidates) {
+    const res = await Promise.all(candidates.map(async c => {
+      return resolveFile(c)
+    }))
+    return res.find(e => e !== undefined)
+  }
+
   function getNodeModulesDirs () {
     const dirs = []
     const nodeModules = 'node_modules'
 
     let dir = basedir
-    while (dir !== dirname(dir)) {
+    while (true) {
       dirs.push(join(dir, nodeModules))
+      if (dir === dirname(dir)) break // means its root
       dir = dirname(dir)
     }
     return dirs
