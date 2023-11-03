@@ -3,12 +3,7 @@
 const em = require('exports-map')
 const { dirname, join, basename, isAbsolute } = require('path')
 
-module.exports = (drive, id, opts = {}, cb) => {
-  if (typeof opts === 'function') {
-    cb = opts
-    opts = {}
-  }
-
+module.exports = async (drive, id, opts = {}) => {
   const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js'] // always add empty extension
   const basedir = opts.basedir || '/'
   const runtimes = opts.runtimes
@@ -20,91 +15,63 @@ module.exports = (drive, id, opts = {}, cb) => {
     } else {
       path = join(basedir, id)
     }
-    isDirectory(path, (err, res) => {
-      if (err) return cb(err)
-      if (res) { // path is dir
-        resolveDir(path)
-      } else { // path is file with or without extension
-        checkExtensions(path, [...extensions], () => cb(throwNotFound()))
-      }
-    })
-  } else { // id is not path
+    if (await isDirectory(path)) {
+      return resolveDirectory(path)
+    } else {
+      return checkExtensions(path, [...extensions])
+    }
+  } else {
     const dirs = getNodeModulesDirs()
     const candidates = dirs.map(e => join(e, id))
-    resolveNodeModules(candidates)
+    return resolveNodeModules(candidates)
   }
 
-  function resolveDir (path) {
-    getPackage(path, (err, pkg) => {
-      if (err) return cb(err)
-      if (pkg) { // has package.json
-        const main = pkg.main || 'index.js'
-        resolveDirPackageMain(path, main)
-      } else { // dir doesnt have package.json
-        const index = join(path, 'index')
-        checkExtensions(index, [...extensions], () => cb(throwNotFound()))
-      }
-    })
+  async function resolveDirectory (path) {
+    const pkg = await getPackage(path)
+    if (pkg) {
+      const main = pkg.main || 'index.js'
+      return resolveDirPackageMain(path, main)
+    } else {
+      const index = join(path, 'index')
+      return checkExtensions(index, [...extensions])
+    }
   }
 
-  function resolveNodeModules (candidates) {
+  async function resolveNodeModules (candidates) {
+    if (!candidates.length) throwModuleNotFound()
     const candidate = candidates.shift()
     const path = candidate
-    getPackage(path, (err, pkg) => {
-      if (err) return cb(err)
-      if (pkg) { // has package.json
-        const main = pkg.main || 'index.js'
-        resolveModulePackageMain(path, main, candidates, candidate)
-      } else { // module doesnt have package.json
-        const index = join(candidate, 'index')
-        const fallback = candidates.length ? () => resolveNodeModules(candidates) : () => cb(throwModuleNotFound())
-        checkExtensions(index, [...extensions], fallback)
-      }
-    })
+    const pkg = await getPackage(path)
+    if (pkg) {
+      const main = pkg.main || 'index.js'
+      return resolveModulePackageMain(path, main, candidates, candidate)
+    } else {
+      const index = join(candidate, 'index')
+      return (await checkExtensions(index)) || (await resolveNodeModules(candidates))
+    }
   }
 
-  function resolveModulePackageMain (path, main, candidates, candidate) {
-    isFile(join(path, main), (err, res) => {
-      if (err) return cb(err)
-      if (res) {
-        cb(null, join(path, main))
-      } else {
-        const index = join(path, 'index')
-        checkExtensions(index, [...extensions], () => {
-          const index = join(candidate, main, 'index') // main is not a file, try finding the index
-          const callback = candidates.length ? () => resolveNodeModules(candidates) : () => cb(throwModuleNotFound())
-          checkExtensions(index, [...extensions], callback)
-        })
-      }
-    })
+  async function resolveModulePackageMain (path, main, candidates, candidate) {
+    if (await isFile(join(path, main))) {
+      return join(path, main)
+    } else {
+      return (await checkExtensions(join(path, 'index'))) || (await checkExtensions(join(path, main, 'index'))) || throwModuleNotFound()
+    }
   }
 
-  function resolveDirPackageMain (path, main) {
-    isFile(join(path, main), (err, res) => {
-      if (err) return cb(err)
-      if (res) {
-        cb(null, join(path, main))
-      } else {
-        const index = join(path, 'index')
-        checkExtensions(index, [...extensions], () => {
-          const index = join(path, main, 'index')
-          checkExtensions(index, [...extensions], () => cb(throwNotFound(id, basedir)))
-        })
-      }
-    })
+  async function resolveDirPackageMain (path, main) {
+    if (await isFile(join(path, main))) {
+      return join(path, main)
+    } else {
+      return (await checkExtensions(join(path, 'index'))) || (await checkExtensions(join(path, main, 'index'))) || throwModuleNotFound()
+    }
   }
 
-  function checkExtensions (index, extensions, fallback) {
-    if (extensions.length === 0) return fallback()
-    const current = index + extensions.shift()
-    isFile(current, (err, res) => {
-      if (err) return cb(err)
-      if (res) {
-        return cb(null, current)
-      } else {
-        checkExtensions(index, extensions, fallback)
-      }
-    })
+  async function checkExtensions (index) {
+    const files = await Promise.all(extensions.map(async e => {
+      return (await isFile(index + e)) ? index + e : null
+    }))
+    return files.find(e => e !== null)
   }
 
   function getNodeModulesDirs () {
@@ -119,49 +86,37 @@ module.exports = (drive, id, opts = {}, cb) => {
     return dirs
   }
 
-  function getPackage (path, cb) {
-    readFile(join(path, 'package.json'), (err, data) => {
-      if (err) return cb(err)
-      if (!err && data) {
-        const pkg = JSON.parse(data.toString())
-        if (!pkg.exports || !runtimes) return cb(null, pkg)
-        const main = em(pkg.exports, runtimes, '.')
-        if (main) pkg.main = main
-        cb(null, pkg)
-      } else {
-        return cb(null)
-      }
-    })
+  async function getPackage (path, cb) {
+    const data = await readFile(join(path, 'package.json'))
+    if (data) {
+      const pkg = JSON.parse(data.toString())
+      if (!pkg.exports || !runtimes) return pkg
+      const main = em(pkg.exports, runtimes, '.')
+      if (main) pkg.main = main
+      return pkg
+    } else {
+      return null
+    }
   }
 
-  function isFile (file, cb) {
-    drive.entry(file).then((node) => {
-      cb(null, node !== null && !!(node.value && node.value.blob))
-    }, cb)
+  async function isFile (file) {
+    const node = await drive.entry(file)
+    return node !== null && !!(node.value && node.value.blob)
   }
 
-  function isDirectory (dir, cb) {
+  async function isDirectory (dir, cb) {
     const ite = drive.readdir(dir)[Symbol.asyncIterator]()
-    ite.next().then(({ value }) => {
-      cb(null, !!value)
-    }, cb)
+    const next = await ite.next()
+    return !!next.value
   }
 
-  function readFile (file, cb) {
-    drive.get(file).then((res) => {
-      cb(null, res)
-    }, cb)
-  }
-
-  function throwNotFound () {
-    const error = new Error(`Cannot find module '${id}' from '${basedir}'`)
-    error.code = 'MODULE_NOT_FOUND'
-    return error
+  async function readFile (file) {
+    return drive.get(file)
   }
 
   function throwModuleNotFound () {
     const error = new Error(`Cannot find module '${id}'`)
     error.code = 'MODULE_NOT_FOUND'
-    return error
+    throw error
   }
 }
