@@ -1,19 +1,26 @@
 'use strict'
 
 const em = require('exports-map')
-const { dirname, join, isAbsolute } = require('path')
+const unixPathResolve = require('unix-path-resolve')
 
 module.exports = async (drive, id, opts = {}) => {
   const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js'] // always add empty extension
   const basedir = opts.basedir || '/'
   const runtimes = opts.runtimes
 
-  if (id[0] === '/' || id[0] === '.') { // is path
+  if (basedir === '/' && id.indexOf('..') === 0) {
+    id = id.substr(1)
+  }
+
+  const isAbsolutePath = id[0] === '/'
+  const isRelativePath = id[0] === '.'
+
+  if (isAbsolutePath || isRelativePath) { // is path
     let path = ''
-    if (isAbsolute(id)) {
+    if (isAbsolutePath) {
       path = id
     } else {
-      path = join(basedir, id)
+      path = resolvePath(basedir, id)
     }
     if (await isDirectory(path)) {
       return (await resolveDirectory(path)) || throwModuleNotFound()
@@ -22,7 +29,7 @@ module.exports = async (drive, id, opts = {}) => {
     }
   } else {
     const dirs = getNodeModulesDirs()
-    const candidates = dirs.map(e => join(e, id))
+    const candidates = dirs.map(e => resolvePath(e, id))
     return (await resolveNodeModulesFile(candidates)) || (await resolveNodeModules(candidates)) || throwModuleNotFound()
   }
 
@@ -32,7 +39,7 @@ module.exports = async (drive, id, opts = {}) => {
       const main = pkg.main || 'index.js'
       return resolvePackageMain(path, main)
     } else {
-      const index = join(path, 'index')
+      const index = resolvePath(path, 'index')
       return resolveFile(index, [...extensions])
     }
   }
@@ -46,16 +53,16 @@ module.exports = async (drive, id, opts = {}) => {
       const main = pkg.main || 'index.js'
       return resolvePackageMain(path, main, candidates, candidate)
     } else {
-      const index = join(candidate, 'index')
+      const index = resolvePath(candidate, 'index')
       return (await resolveFile(index)) || (await resolveNodeModules(candidates))
     }
   }
 
   async function resolvePackageMain (path, main, candidates, candidate) {
-    if (await isFile(join(path, main))) {
-      return join(path, main)
+    if (await isFile(resolvePath(path, main))) {
+      return resolvePath(path, main)
     } else {
-      return (await resolveFile(join(path, main, 'index'))) || (await resolveFile(join(path, 'index')))
+      return (await resolveFile(resolvePath(path, main, 'index'))) || (await resolveFile(resolvePath(path, 'index')))
     }
   }
 
@@ -81,15 +88,15 @@ module.exports = async (drive, id, opts = {}) => {
 
     let dir = basedir
     while (true) {
-      dirs.push(join(dir, nodeModules))
-      if (dir === dirname(dir)) break // means its root
-      dir = dirname(dir)
+      dirs.push(resolvePath(dir, nodeModules))
+      if (dir === '/') break
+      dir = resolvePath(dir, '..')
     }
     return dirs
   }
 
   async function getPackage (path, cb) {
-    const data = await readFile(join(path, 'package.json'))
+    const data = await readFile(resolvePath(path, 'package.json'))
     if (data) {
       const pkg = JSON.parse(data.toString())
       if (!pkg.exports || !runtimes) return pkg
@@ -120,5 +127,14 @@ module.exports = async (drive, id, opts = {}) => {
     const error = new Error(`Cannot find module '${id}'`)
     error.code = 'MODULE_NOT_FOUND'
     throw error
+  }
+}
+
+function resolvePath (...args) {
+  if (args.length === 1) {
+    return unixPathResolve(args[0])
+  } else {
+    const last = args.pop()
+    return unixPathResolve(resolvePath(...args), last)
   }
 }

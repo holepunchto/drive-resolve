@@ -34,6 +34,7 @@
     ]
   },
   "dependencies": {
-    "exports-map": "^1.0.2"
+    "exports-map": "^1.0.2",
+    "unix-path-resolve": "^1.0.2"
   }
 }
