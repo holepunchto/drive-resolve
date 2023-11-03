@@ -16,14 +16,14 @@ module.exports = async (drive, id, opts = {}) => {
       path = join(basedir, id)
     }
     if (await isDirectory(path)) {
-      return resolveDirectory(path)
+      return (await resolveDirectory(path)) || throwModuleNotFound()
     } else {
-      return checkExtensions(path, [...extensions])
+      return (await checkExtensions(path, [...extensions])) || throwModuleNotFound()
     }
   } else {
     const dirs = getNodeModulesDirs()
     const candidates = dirs.map(e => join(e, id))
-    return resolveNodeModules(candidates)
+    return (await resolveNodeModules(candidates)) || throwModuleNotFound()
   }
 
   async function resolveDirectory (path) {
@@ -38,7 +38,7 @@ module.exports = async (drive, id, opts = {}) => {
   }
 
   async function resolveNodeModules (candidates) {
-    if (!candidates.length) throwModuleNotFound()
+    if (!candidates.length) return
     const candidate = candidates.shift()
     const path = candidate
     const pkg = await getPackage(path)
@@ -55,7 +55,7 @@ module.exports = async (drive, id, opts = {}) => {
     if (await isFile(join(path, main))) {
       return join(path, main)
     } else {
-      return (await checkExtensions(join(path, 'index'))) || (await checkExtensions(join(path, main, 'index'))) || throwModuleNotFound()
+      return (await checkExtensions(join(path, 'index'))) || (await checkExtensions(join(path, main, 'index')))
     }
   }
 
@@ -63,7 +63,7 @@ module.exports = async (drive, id, opts = {}) => {
     if (await isFile(join(path, main))) {
       return join(path, main)
     } else {
-      return (await checkExtensions(join(path, 'index'))) || (await checkExtensions(join(path, main, 'index'))) || throwModuleNotFound()
+      return (await checkExtensions(join(path, 'index'))) || (await checkExtensions(join(path, main, 'index')))
     }
   }
 
