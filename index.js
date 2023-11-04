@@ -14,6 +14,7 @@ module.exports = async (drive, id, opts = {}) => {
 
   const isAbsolutePath = id[0] === '/'
   const isRelativePath = id[0] === '.'
+  let result
 
   if (isAbsolutePath || isRelativePath) { // is path
     let path = ''
@@ -23,14 +24,20 @@ module.exports = async (drive, id, opts = {}) => {
       path = resolvePath(basedir, id)
     }
     if (await isDirectory(path)) {
-      return (await resolveDirectory(path)) || throwModuleNotFound()
+      result = await resolveDirectory(path)
     } else {
-      return (await resolveFile(path, [...extensions])) || throwModuleNotFound()
+      result = await resolveFile(path)
     }
   } else {
     const dirs = getNodeModulesDirs()
     const candidates = dirs.map(e => resolvePath(e, id))
-    return (await resolveNodeModulesFile(candidates)) || (await resolveNodeModules(candidates)) || throwModuleNotFound()
+    result = await resolveNodeModulesFile(candidates) || await resolveNodeModules(candidates)
+  }
+
+  if (result) {
+    return result
+  } else {
+    throwModuleNotFound()
   }
 
   async function resolveDirectory (path) {
@@ -40,7 +47,7 @@ module.exports = async (drive, id, opts = {}) => {
       return resolvePackageMain(path, main)
     } else {
       const index = resolvePath(path, 'index')
-      return resolveFile(index, [...extensions])
+      return resolveFile(index)
     }
   }
 
