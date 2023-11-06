@@ -4,7 +4,7 @@ const em = require('exports-map')
 const unixPathResolve = require('unix-path-resolve')
 
 module.exports = async (drive, id, opts = {}) => {
-  const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js'] // always add empty extension
+  const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js', '.cjs', '.json', '.mjs'] // always add empty extension
   const basedir = opts.basedir || '/'
   const runtimes = opts.runtimes
 

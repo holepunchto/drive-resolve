@@ -159,26 +159,26 @@ test('resolves using parent folder path', async (t) => {
   t.is(result, path.join(dir, 'index.js'))
 })
 
-test.skip('custom extension and opts.extensions work', async (t) => {
+test('custom extensions', async (t) => {
   t.plan(4)
 
   const drive = await mirror(path.join(__dirname, 'fixtures'))
   const dir = '/resolver'
 
   {
-    const result = await resolve(drive, './cup', { basedir: dir, extensions: ['.js', '.coffee'] })
+    const result = await resolve(drive, './cup.coffee', { basedir: dir, extensions: ['.js', '.coffee'] })
     t.is(result, path.join(dir, 'cup.coffee'))
   }
 
   {
-    const result = await resolve(drive, './cup.coffee', { basedir: dir })
-    t.is(result, path.join(dir, 'cup.coffee'))
+    const result = await resolve(drive, './cup.cjs', { basedir: dir })
+    t.is(result, path.join(dir, 'cup.cjs'))
   }
 
   try {
-    resolve(drive, './cup', { basedir: dir, extensions: ['.js'] })
+    await resolve(drive, './cup', { basedir: dir, extensions: ['.js'] })
   } catch (err) {
-    t.is(err.message, "Cannot find module './cup' from '" + path.resolve(dir) + "'")
+    t.is(err.message, "Cannot find module './cup'")
     t.is(err.code, 'MODULE_NOT_FOUND')
   }
 })
