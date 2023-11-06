@@ -23,10 +23,10 @@ module.exports = async (drive, id, opts = {}) => {
     } else {
       path = resolvePath(basedir, id)
     }
-    if (await isDirectory(path)) {
+
+    result = await resolveFile(path)
+    if (!result || id[id.length - 1] === '/') {
       result = await resolveDirectory(path)
-    } else {
-      result = await resolveFile(path)
     }
   } else {
     const dirs = getNodeModulesDirs()
@@ -44,6 +44,7 @@ module.exports = async (drive, id, opts = {}) => {
     const pkg = await getPackage(path)
     if (pkg) {
       const main = pkg.main || 'index.js'
+      if (typeof main !== 'string') throwInvalidMain()
       return resolvePackageMain(path, main)
     } else {
       const index = resolvePath(path, 'index')
@@ -120,12 +121,6 @@ module.exports = async (drive, id, opts = {}) => {
     return node !== null && !!(node.value && node.value.blob)
   }
 
-  async function isDirectory (dir, cb) {
-    const ite = drive.readdir(dir)[Symbol.asyncIterator]()
-    const next = await ite.next()
-    return !!next.value
-  }
-
   async function readFile (file) {
     return drive.get(file)
   }
@@ -133,6 +128,12 @@ module.exports = async (drive, id, opts = {}) => {
   function throwModuleNotFound () {
     const error = new Error(`Cannot find module '${id}'`)
     error.code = 'MODULE_NOT_FOUND'
+    throw error
+  }
+
+  function throwInvalidMain () {
+    const error = new Error(`Package ${id} main must be a string`)
+    error.code = 'INVALID_PACKAGE_MAIN'
     throw error
   }
 }

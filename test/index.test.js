@@ -261,3 +261,68 @@ test('resolves to index.js if main is null in package.json', async (t) => {
   const result = await resolve(drive, './null_main', { basedir: resolverDir })
   t.is(result, path.join(dir, 'index.js'))
 })
+
+test('main is false', async (t) => {
+  t.plan(1)
+
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const basedir = '/resolver'
+  const result = await resolve(drive, './false_main', { basedir })
+  t.is(result, path.join(basedir, 'false_main', 'index.js'))
+})
+
+test('main is false', async (t) => {
+  t.plan(1)
+
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const basedir = '/resolver'
+  const result = await resolve(drive, './false_main', { basedir })
+  t.is(result, path.join(basedir, 'false_main', 'index.js'))
+})
+
+test(' resolves module-paths like "./someFolder/" when there is a file of the same name', async (t) => {
+  t.plan(2)
+
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const basedir = '/resolver/same_names'
+
+  {
+    const result = await resolve(drive, './foo/', { basedir })
+    t.is(result, '/resolver/same_names/foo/index.js')
+  }
+
+  {
+    const result = await resolve(drive, './foo', { basedir })
+    t.is(result, '/resolver/same_names/foo.js')
+  }
+})
+
+test('resolves module-paths like "." when from inside a folder with a sibling file of the same name', async (t) => {
+  t.plan(2)
+
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver'
+  const basedir = '/resolver/same_names/foo'
+
+  {
+    const result = await resolve(drive, './', { basedir })
+    t.is(result, path.join(dir, 'same_names/foo/index.js'))
+  }
+  {
+    const result = await resolve(drive, '.', { basedir })
+    t.is(result, path.join(dir, 'same_names/foo.js'))
+  }
+})
+
+test('non-string "main" field in package.json', async (t) => {
+  t.plan(2)
+
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const basedir = '/resolver'
+  try {
+    await resolve(drive, './invalid_main', { basedir })
+  } catch (err) {
+    t.is(err.message, 'Package ./invalid_main main must be a string')
+    t.is(err.code, 'INVALID_PACKAGE_MAIN')
+  }
+})
