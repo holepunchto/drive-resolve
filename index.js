@@ -103,7 +103,7 @@ module.exports = async (drive, id, opts = {}) => {
     return dirs
   }
 
-  async function getPackage (path, cb) {
+  async function getPackage (path) {
     const data = await readFile(resolvePath(path, 'package.json'))
     if (data) {
       const pkg = JSON.parse(data.toString())
