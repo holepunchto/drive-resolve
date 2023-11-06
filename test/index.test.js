@@ -1,13 +1,13 @@
 const path = require('path')
 const test = require('brittle')
 const resolve = require('../index.js')
-const { createDriveFromDir } = require('./helpers/index.js')
+const { mirror } = require('./helpers/index.js')
 
 test('resolves absolute dir', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const id = '/fixtures/relative/path'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const id = '/relative/path'
   const result = await resolve(drive, id)
   t.is(result, path.join(id, 'index.js'))
 })
@@ -15,8 +15,8 @@ test('resolves absolute dir', async (t) => {
 test('resolves absolute file', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const id = '/fixtures/relative/path/index.js'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const id = '/relative/path/index.js'
   const result = await resolve(drive, id)
   t.is(result, id)
 })
@@ -24,25 +24,25 @@ test('resolves absolute file', async (t) => {
 test('resolves relative path', async (t) => {
   t.plan(2)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
 
   {
-    const id = './fixtures/relative/path'
+    const id = './relative/path'
     const result = await resolve(drive, id)
-    t.is(result, '/fixtures/relative/path/index.js')
+    t.is(result, '/relative/path/index.js')
   }
   {
-    const id = '../fixtures/relative/path'
+    const id = '../relative/path'
     const result = await resolve(drive, id)
-    t.is(result, '/fixtures/relative/path/index.js')
+    t.is(result, '/relative/path/index.js')
   }
 })
 
 test('package.json main', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const id = '/fixtures/main'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const id = '/main'
   const result = await resolve(drive, id)
   t.is(result, path.join(id, 'main.js'))
 })
@@ -50,8 +50,8 @@ test('package.json main', async (t) => {
 test('package.json main is folder', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const id = '/fixtures/main-is-folder'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const id = '/main-is-folder'
   const result = await resolve(drive, id)
   t.is(result, path.join(id, '/lib/index.js'))
 })
@@ -59,8 +59,8 @@ test('package.json main is folder', async (t) => {
 test('resolves without extension', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const id = '/fixtures/relative/path/index'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const id = '/relative/path/index'
   const result = await resolve(drive, id)
   t.is(result, id + '.js')
 })
@@ -68,8 +68,8 @@ test('resolves without extension', async (t) => {
 test('resolves relative path with/without extension', async (t) => {
   t.plan(2)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const dir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver'
 
   {
     const result = await resolve(drive, './foo', { basedir: dir })
@@ -85,8 +85,8 @@ test('resolves relative path with/without extension', async (t) => {
 test('resolves by module name from basedir', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const dir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver'
 
   const result = await resolve(drive, 'foo', { basedir: dir + '/bar' })
   t.is(result, path.join(dir, 'bar/node_modules/foo/index.js'))
@@ -95,8 +95,8 @@ test('resolves by module name from basedir', async (t) => {
 test('resolves main with relative path', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const dir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver'
 
   const result = await resolve(drive, './baz', { basedir: dir })
   t.is(result, path.join(dir, 'baz/quux.js'))
@@ -105,8 +105,8 @@ test('resolves main with relative path', async (t) => {
 test('resolves to parent node_modules with module name and relative path', async (t) => {
   t.plan(6)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const dir = '/fixtures/resolver/biz/node_modules'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver/biz/node_modules'
 
   {
     const result = await resolve(drive, './grux', { basedir: dir })
@@ -142,8 +142,8 @@ test('resolves to parent node_modules with module name and relative path', async
 test('resolves without package.json', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const dir = '/fixtures/resolver/quux'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver/quux'
 
   const result = await resolve(drive, './foo', { basedir: dir })
   t.is(result, path.join(dir, 'foo/index.js'))
@@ -152,8 +152,8 @@ test('resolves without package.json', async (t) => {
 test('resolves using parent folder path', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const dir = '/fixtures/resolver/biz/node_modules/grux'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver/biz/node_modules/grux'
 
   const result = await resolve(drive, '../grux', { basedir: dir })
   t.is(result, path.join(dir, 'index.js'))
@@ -162,8 +162,8 @@ test('resolves using parent folder path', async (t) => {
 test.skip('custom extension and opts.extensions work', async (t) => {
   t.plan(4)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const dir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver'
 
   {
     const result = await resolve(drive, './cup', { basedir: dir, extensions: ['.js', '.coffee'] })
@@ -186,8 +186,8 @@ test.skip('custom extension and opts.extensions work', async (t) => {
 test('by default resolves to .js extension unless specified in opts.extensions', async (t) => {
   t.plan(3)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const dir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const dir = '/resolver'
 
   {
     const result = await resolve(drive, './mug', { basedir: dir })
@@ -208,8 +208,8 @@ test('by default resolves to .js extension unless specified in opts.extensions',
 test('resolves to index.js when main is empty', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const resolverDir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const resolverDir = '/resolver'
   const dir = path.join(resolverDir, 'empty_main')
 
   const result = await resolve(drive, './empty_main', { basedir: resolverDir })
@@ -219,8 +219,8 @@ test('resolves to index.js when main is empty', async (t) => {
 test('resolves to index.js when main is incorrect', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const resolverDir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const resolverDir = '/resolver'
   const dir = path.join(resolverDir, 'incorrect_main')
 
   const result = await resolve(drive, './incorrect_main', { basedir: resolverDir })
@@ -230,8 +230,8 @@ test('resolves to index.js when main is incorrect', async (t) => {
 test('returns error if index is missing', async (t) => {
   t.plan(2)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const resolverDir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const resolverDir = '/resolver'
   try {
     await resolve(drive, './missing_index', { basedir: resolverDir })
   } catch (err) {
@@ -243,8 +243,8 @@ test('returns error if index is missing', async (t) => {
 test('resolves to index.js if no main in package.json', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const resolverDir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const resolverDir = '/resolver'
   const dir = path.join(resolverDir, 'missing_main')
 
   const result = await resolve(drive, './missing_main', { basedir: resolverDir })
@@ -254,8 +254,8 @@ test('resolves to index.js if no main in package.json', async (t) => {
 test('resolves to index.js if main is null in package.json', async (t) => {
   t.plan(1)
 
-  const drive = await createDriveFromDir(path.join(__dirname, 'fixtures'))
-  const resolverDir = '/fixtures/resolver'
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  const resolverDir = '/resolver'
   const dir = path.join(resolverDir, 'null_main')
 
   const result = await resolve(drive, './null_main', { basedir: resolverDir })
