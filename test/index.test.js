@@ -326,3 +326,18 @@ test('non-string "main" field in package.json', async (t) => {
     t.is(err.code, 'INVALID_PACKAGE_MAIN')
   }
 })
+
+test('conditional exports', async (t) => {
+  t.plan(2)
+
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  {
+    const result = await resolve(drive, 'conditional-exports')
+    t.is(result, '/node_modules/conditional-exports/index.cjs.js')
+  }
+  {
+    const runtimes = new Set(['require'])
+    const result = await resolve(drive, 'conditional-exports/submodule.js', { runtimes })
+    t.is(result, '/node_modules/conditional-exports/prod/index.cjs.js')
+  }
+})

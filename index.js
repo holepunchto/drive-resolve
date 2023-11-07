@@ -30,7 +30,7 @@ module.exports = async (drive, id, opts = {}) => {
     }
   } else {
     const dirs = getNodeModulesDirs()
-    const candidates = dirs.map(e => resolvePath(e, id))
+    const candidates = dirs.map(e => resolvePath(e, id.split('/')[0]))
     result = await resolveNodeModulesFile(candidates) || await resolveNodeModules(candidates)
   }
 
@@ -41,7 +41,7 @@ module.exports = async (drive, id, opts = {}) => {
   }
 
   async function resolveDirectory (path) {
-    const pkg = await getPackage(path)
+    const pkg = await getDirectoryPackage(path)
     if (pkg) {
       const main = pkg.main || 'index.js'
       if (typeof main !== 'string') throwInvalidMain()
@@ -56,7 +56,8 @@ module.exports = async (drive, id, opts = {}) => {
     if (!candidates.length) return
     const candidate = candidates.shift()
     const path = candidate
-    const pkg = await getPackage(path)
+    const submodule = getSubmodule(id)
+    const pkg = await getNodeModulesPackage(path, submodule)
     if (pkg) {
       const main = pkg.main || 'index.js'
       return resolvePackageMain(path, main, candidates, candidate)
@@ -103,14 +104,23 @@ module.exports = async (drive, id, opts = {}) => {
     return dirs
   }
 
-  async function getPackage (path) {
-    const data = await readFile(resolvePath(path, 'package.json'))
+  async function getNodeModulesPackage (id, submodule) {
+    const data = await readFile(resolvePath(id, 'package.json'))
     if (data) {
       const pkg = JSON.parse(data.toString())
       if (!pkg.exports || !runtimes) return pkg
-      const main = em(pkg.exports, runtimes, '.')
+      const main = em(pkg.exports, runtimes, submodule)
       if (main) pkg.main = main
       return pkg
+    } else {
+      return null
+    }
+  }
+
+  async function getDirectoryPackage (path) {
+    const data = await readFile(resolvePath(path, 'package.json'))
+    if (data) {
+      return JSON.parse(data.toString())
     } else {
       return null
     }
@@ -145,4 +155,10 @@ function resolvePath (...args) {
     const last = args.pop()
     return unixPathResolve(resolvePath(...args), last)
   }
+}
+
+function getSubmodule (id) {
+  const submodule = id.split('/')
+  submodule.shift()
+  return submodule.join('/')
 }
