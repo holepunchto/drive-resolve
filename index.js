@@ -30,8 +30,9 @@ module.exports = async (drive, id, opts = {}) => {
     }
   } else {
     const dirs = getNodeModulesDirs()
-    const candidates = dirs.map(e => resolvePath(e, id.split('/')[0]))
-    result = await resolveNodeModulesFile(candidates) || await resolveNodeModules(candidates)
+    const module = getModuleId(id)
+    const candidates = dirs.map(e => resolvePath(e, module))
+    result = await resolveNodeModulesFile(candidates) || await resolveNodeModules(candidates, module)
   }
 
   if (result) {
@@ -157,16 +158,23 @@ function resolvePath (...args) {
   }
 }
 
+function getModuleId (id) {
+  if (id[0] === '@') {
+    return id.split('/')[0] + '/' + id.split('/')[1]
+  } else {
+    return id.split('/')[0]
+  }
+}
+
 function getSubmodule (id) {
-  const submodule = id.split('/')
-  submodule.shift()
+  const submodule = id.substr(getModuleId(id).length + 1)
   if (submodule.length === 0) {
     return '.'
   } else {
     if (submodule.indexOf('./') === 0) {
-      return submodule.join('/')
+      return submodule
     } else {
-      return './' + submodule.join('/')
+      return './' + submodule
     }
   }
 }
