@@ -160,5 +160,13 @@ function resolvePath (...args) {
 function getSubmodule (id) {
   const submodule = id.split('/')
   submodule.shift()
-  return submodule.join('/')
+  if (submodule.length === 0) {
+    return '.'
+  } else {
+    if (submodule.indexOf('./') === 0) {
+      return submodule.join('/')
+    } else {
+      return './' + submodule.join('/')
+    }
+  }
 }
