@@ -341,3 +341,18 @@ test('conditional exports', async (t) => {
     t.is(result, '/node_modules/conditional-exports/prod/index.cjs.js')
   }
 })
+
+test.solo('npm registry', async (t) => {
+  t.plan(2)
+
+  const drive = await mirror(path.join(__dirname, 'fixtures'))
+  {
+    const result = await resolve(drive, '@registry/module')
+    t.is(result, '/node_modules/@registry/module/index.js')
+  }
+  {
+    const runtimes = new Set(['require'])
+    const result = await resolve(drive, '@registry/module/submodule.js', { runtimes })
+    t.is(result, '/node_modules/@registry/module/submodule/index.js')
+  }
+})
