@@ -31,8 +31,9 @@ module.exports = async (drive, id, opts = {}) => {
   } else {
     const dirs = getNodeModulesDirs()
     const module = getModuleId(id)
-    const candidates = dirs.map(e => resolvePath(e, module))
-    result = await resolveNodeModulesFile(candidates) || await resolveNodeModules(candidates, module)
+    const fileCandidates = dirs.map(e => resolvePath(e, id))
+    const moduleCandidates = dirs.map(e => resolvePath(e, module))
+    result = await resolveNodeModulesFile(fileCandidates) || await resolveNodeModules(moduleCandidates)
   }
 
   if (result) {
