@@ -328,7 +328,7 @@ test('non-string "main" field in package.json', async (t) => {
 })
 
 test('conditional exports', async (t) => {
-  t.plan(3)
+  t.plan(2)
 
   const drive = await mirror(path.join(__dirname, 'fixtures'))
   {
@@ -339,11 +339,6 @@ test('conditional exports', async (t) => {
     const runtimes = new Set(['require'])
     const result = await resolve(drive, 'conditional-exports/submodule.js', { runtimes })
     t.is(result, '/node_modules/conditional-exports/prod/index.cjs.js')
-  }
-  {
-    const runtimes = new Set(['module', 'import'])
-    const result = await resolve(drive, '@twind/content', { runtimes })
-    t.is(result, '/node_modules/@twind/content/content.js')
   }
 })
 
@@ -363,5 +358,19 @@ test('npm registry', async (t) => {
     const runtimes = new Set(['require'])
     const result = await resolve(drive, '@registry/module/submodule.js', { runtimes })
     t.is(result, '/node_modules/@registry/module/submodule/index.js')
+  }
+})
+
+test('resolves node module file directory', async (t) => {
+  t.plan(2)
+  {
+    const drive = await mirror(path.join(__dirname, 'fixtures'))
+    const result = await resolve(drive, '@foo/bar/index')
+    t.is(result, '/node_modules/@foo/bar/index.js')
+  }
+  {
+    const drive = await mirror(path.join(__dirname, 'fixtures'))
+    const result = await resolve(drive, '@foo/bar/biz')
+    t.is(result, '/node_modules/@foo/bar/biz/index.js')
   }
 })

@@ -2,11 +2,13 @@
 
 const em = require('exports-map')
 const unixPathResolve = require('unix-path-resolve')
+const b4a = require('b4a')
 
 module.exports = async (drive, id, opts = {}) => {
   const extensions = opts.extensions ? ['', ...opts.extensions] : ['', '.js', '.cjs', '.json', '.mjs'] // always add empty extension
   const basedir = opts.basedir || '/'
   const runtimes = opts.runtimes
+  const sourceOverwrites = opts.sourceOverwrites || null
 
   if (basedir === '/' && id.indexOf('..') === 0) {
     id = id.substr(1)
@@ -32,8 +34,9 @@ module.exports = async (drive, id, opts = {}) => {
     const dirs = getNodeModulesDirs()
     const module = getModuleId(id)
     const fileCandidates = dirs.map(e => resolvePath(e, id))
+    const directoryCandidates = dirs.map(e => resolvePath(e, id))
     const moduleCandidates = dirs.map(e => resolvePath(e, module))
-    result = await resolveNodeModulesFile(fileCandidates) || await resolveNodeModules(moduleCandidates)
+    result = await resolveNodeModulesFile(fileCandidates) || await resolveNodeModulesDirectory(directoryCandidates) || await resolveNodeModules(moduleCandidates)
   }
 
   if (result) {
@@ -93,6 +96,13 @@ module.exports = async (drive, id, opts = {}) => {
     return res.find(e => e !== undefined)
   }
 
+  async function resolveNodeModulesDirectory (candidates) {
+    const res = await Promise.all(candidates.map(async c => {
+      return resolveDirectory(c)
+    }))
+    return res.find(e => e !== undefined)
+  }
+
   function getNodeModulesDirs () {
     const dirs = []
     const nodeModules = 'node_modules'
@@ -107,9 +117,9 @@ module.exports = async (drive, id, opts = {}) => {
   }
 
   async function getNodeModulesPackage (id, submodule) {
-    const data = await readFile(resolvePath(id, 'package.json'))
-    if (data) {
-      const pkg = JSON.parse(data.toString())
+    const file = await isFile(resolvePath(id, 'package.json')) && await readFile(resolvePath(id, 'package.json'))
+    if (file) {
+      const pkg = JSON.parse(file.toString())
       if (!pkg.exports || !runtimes) return pkg
       const main = em(pkg.exports, runtimes, submodule)
       if (main) pkg.main = main
@@ -120,9 +130,9 @@ module.exports = async (drive, id, opts = {}) => {
   }
 
   async function getDirectoryPackage (path) {
-    const data = await readFile(resolvePath(path, 'package.json'))
-    if (data) {
-      return JSON.parse(data.toString())
+    const file = await isFile(resolvePath(path, 'package.json')) && await readFile(resolvePath(path, 'package.json'))
+    if (file) {
+      return JSON.parse(file.toString())
     } else {
       return null
     }
@@ -133,8 +143,14 @@ module.exports = async (drive, id, opts = {}) => {
     return node !== null && !!(node.value && node.value.blob)
   }
 
-  async function readFile (file) {
-    return drive.get(file)
+  async function readFile (name) {
+    if (sourceOverwrites !== null && Object.hasOwn(sourceOverwrites, name)) {
+      const overwrite = sourceOverwrites[name]
+      return typeof overwrite === 'string' ? b4a.from(overwrite) : overwrite
+    }
+
+    const src = await drive.get(name)
+    return src
   }
 
   function throwModuleNotFound () {
