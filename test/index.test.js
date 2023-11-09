@@ -328,7 +328,7 @@ test('non-string "main" field in package.json', async (t) => {
 })
 
 test('conditional exports', async (t) => {
-  t.plan(2)
+  t.plan(4)
 
   const drive = await mirror(path.join(__dirname, 'fixtures'))
   {
@@ -339,6 +339,16 @@ test('conditional exports', async (t) => {
     const runtimes = new Set(['require'])
     const result = await resolve(drive, 'conditional-exports/submodule.js', { runtimes })
     t.is(result, '/node_modules/conditional-exports/prod/index.cjs.js')
+  }
+  {
+    const runtimes = new Set(['node'])
+    const result = await resolve(drive, 'conditional-exports/conditional.js', { runtimes })
+    t.is(result, '/node_modules/conditional-exports/feature-node.js')
+  }
+  {
+    const runtimes = new Set(['default'])
+    const result = await resolve(drive, 'conditional-exports/conditional.js', { runtimes })
+    t.is(result, '/node_modules/conditional-exports/feature.js')
   }
 })
 
