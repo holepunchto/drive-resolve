@@ -43,9 +43,9 @@ module.exports = async (drive, id, opts = {}) => {
 
   if (result) {
     return result
-  } else {
-    throwModuleNotFound()
   }
+
+  throwModuleNotFound()
 
   async function resolveDirectory (path) {
     const pkg = await getDirectoryPackage(path)
@@ -82,27 +82,25 @@ module.exports = async (drive, id, opts = {}) => {
     }
   }
 
-  // TODO this is not deterministic in case of node_modules and node_modules of parent have the same module, make it sequencial
-
   async function resolveFile (index) {
-    const files = await Promise.all(extensions.map(async e => {
-      return (await isFile(index + e)) ? index + e : null
-    }))
-    return files.find(e => e !== null)
+    for (let i = 0; i < extensions.length; i++) {
+      const file = await isFile(index + extensions[i])
+      if (file) return index + extensions[i]
+    }
   }
 
   async function resolveNodeModulesFile (candidates) {
-    const res = await Promise.all(candidates.map(async c => {
-      return resolveFile(c)
-    }))
-    return res.find(e => e !== undefined)
+    for (let i = 0; i < candidates.length; i++) {
+      const file = await resolveFile(candidates[i])
+      if (file) return file
+    }
   }
 
   async function resolveNodeModulesDirectory (candidates) {
-    const res = await Promise.all(candidates.map(async c => {
-      return resolveDirectory(c)
-    }))
-    return res.find(e => e !== undefined)
+    for (let i = 0; i < candidates.length; i++) {
+      const directory = await resolveDirectory(candidates[i])
+      if (directory) return directory
+    }
   }
 
   function getNodeModulesDirs () {
