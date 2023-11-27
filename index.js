@@ -10,9 +10,9 @@ module.exports = async (drive, id, opts = {}) => {
   const runtimes = opts.runtimes
   const sourceOverwrites = opts.sourceOverwrites || null
 
-  if (basedir === '/' && id.indexOf('..') === 0) {
-    id = id.substr(1)
-  }
+  if (basedir === '/' && id.indexOf('..') === 0) id = id.substr(1)
+  if (id === '.' || id === './') id = './index'
+  if (id === '..' || id === '../') id = '../index'
 
   const isAbsolutePath = id[0] === '/'
   const isRelativePath = id[0] === '.'

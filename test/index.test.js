@@ -310,7 +310,7 @@ test('resolves module-paths like "." when from inside a folder with a sibling fi
   }
   {
     const result = await resolve(drive, '.', { basedir })
-    t.is(result, path.join(dir, 'same_names/foo.js'))
+    t.is(result, path.join(dir, 'same_names/foo/index.js'))
   }
 })
 
@@ -382,5 +382,30 @@ test('resolves node module file directory', async (t) => {
     const drive = await mirror(path.join(__dirname, 'fixtures'))
     const result = await resolve(drive, '@foo/bar/biz')
     t.is(result, '/node_modules/@foo/bar/biz/index.js')
+  }
+})
+
+test('resolves dot and double dot from basedir /', async (t) => {
+  t.plan(4)
+  {
+    const drive = await mirror(path.join(__dirname, 'fixtures'))
+    const result = await resolve(drive, '.')
+    t.is(result, '/index.js')
+  }
+  {
+    const drive = await mirror(path.join(__dirname, 'fixtures'))
+    const result = await resolve(drive, '..')
+    t.is(result, '/index.js')
+  }
+  {
+    const drive = await mirror(path.join(__dirname, 'fixtures'))
+    const result = await resolve(drive, '..', { basedir: '/main' })
+    t.is(result, '/index.js')
+  }
+  try {
+    const drive = await mirror(path.join(__dirname, 'fixtures'))
+    await resolve(drive, './wrong.js')
+  } catch (err) {
+    t.is(err.code, 'MODULE_NOT_FOUND')
   }
 })
