@@ -21,4 +21,8 @@ module.exports = async (drive, id, opts = {}) => {
       return pathname
     }
   }
+
+  const err = new Error(`Cannot find module '${id}'`)
+  err.code = 'MODULE_NOT_FOUND'
+  throw err
 }
