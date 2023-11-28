@@ -12,7 +12,7 @@ module.exports = async (drive, id, opts = {}) => {
     }
   }
 
-  for (const { pathname } of resolve(id, new URL('file://' + basedir), { extensions }, readPackage)) {
+  for await (const { pathname } of resolve(id, new URL('file://' + basedir), { extensions }, readPackage)) {
     if (await drive.entry(pathname)) {
       return pathname
     }
