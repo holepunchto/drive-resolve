@@ -2,14 +2,21 @@
 const path = require('path')
 const url = require('url')
 const resolve = require('bare-module-resolve')
+const b4a = require('b4a')
 
 module.exports = async (drive, id, opts = {}) => {
   const extensions = opts.extensions || ['.js', '.cjs', '.json', '.mjs']
   const basedir = opts.basedir || path.sep
-  const conditions = opts.conditions
+  const conditions = opts.runtimes
+  const sourceOverwrites = opts.sourceOverwrites || {}
 
   const readPackage = async (packageURL) => {
     const pathname = url.fileURLToPath(packageURL)
+
+    if (sourceOverwrites !== null && Object.hasOwn(sourceOverwrites, pathname)) {
+      const overwrite = sourceOverwrites[pathname]
+      return typeof overwrite === 'string' ? b4a.from(overwrite) : overwrite
+    }
 
     if (await drive.entry(pathname)) {
       const file = await drive.get(pathname)

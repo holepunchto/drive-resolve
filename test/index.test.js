@@ -312,18 +312,18 @@ test('conditional exports', async (t) => {
     t.is(result, '/node_modules/conditional-exports/index.cjs.js')
   }
   {
-    const conditions = ['require']
-    const result = await resolve(drive, 'conditional-exports/submodule.js', { conditions })
+    const runtimes = ['require']
+    const result = await resolve(drive, 'conditional-exports/submodule.js', { runtimes })
     t.is(result, '/node_modules/conditional-exports/prod/index.cjs.js')
   }
   {
-    const conditions = ['node']
-    const result = await resolve(drive, 'conditional-exports/conditional.js', { conditions })
+    const runtimes = ['node']
+    const result = await resolve(drive, 'conditional-exports/conditional.js', { runtimes })
     t.is(result, '/node_modules/conditional-exports/feature-node.js')
   }
   {
-    const conditions = ['default']
-    const result = await resolve(drive, 'conditional-exports/conditional.js', { conditions })
+    const runtimes = ['default']
+    const result = await resolve(drive, 'conditional-exports/conditional.js', { runtimes })
     t.is(result, '/node_modules/conditional-exports/feature.js')
   }
 })
