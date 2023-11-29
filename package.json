@@ -38,6 +38,6 @@
   },
   "dependencies": {
     "b4a": "^1.6.4",
-    "bare-module-resolve": "github:holepunchto/bare-module-resolve"
+    "bare-module-resolve": "^1.2.5"
   }
 }
