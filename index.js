@@ -15,7 +15,7 @@ module.exports = async (drive, id, opts = {}) => {
 
     if (Object.hasOwn(sourceOverwrites, pathname)) {
       const overwrite = sourceOverwrites[pathname]
-      return typeof overwrite === 'string' ? b4a.from(overwrite) : overwrite
+      return JSON.parse(overwrite.toString())
     }
 
     if (await drive.entry(pathname)) {
