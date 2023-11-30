@@ -13,7 +13,7 @@ module.exports = async (drive, id, opts = {}) => {
   const readPackage = async (packageURL) => {
     const pathname = url.fileURLToPath(packageURL)
 
-    if (sourceOverwrites !== null && Object.hasOwn(sourceOverwrites, pathname)) {
+    if (Object.hasOwn(sourceOverwrites, pathname)) {
       const overwrite = sourceOverwrites[pathname]
       return typeof overwrite === 'string' ? b4a.from(overwrite) : overwrite
     }
