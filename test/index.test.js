@@ -216,17 +216,6 @@ test('resolves to index.js when main is empty', async (t) => {
   t.is(result, path.join(dir, 'index.js'))
 })
 
-test('resolves to index.js when main is incorrect', async (t) => {
-  t.plan(1)
-
-  const drive = await mirror(path.join(__dirname, 'fixtures'))
-  const resolverDir = '/resolver'
-  const dir = path.join(resolverDir, 'incorrect_main')
-
-  const result = await resolve(drive, './incorrect_main', { basedir: resolverDir })
-  t.is(result, path.join(dir, 'index.js'))
-})
-
 test('returns error if index is missing', async (t) => {
   t.plan(2)
 
@@ -314,19 +303,6 @@ test('resolves module-paths like "." when from inside a folder with a sibling fi
   }
 })
 
-test('non-string "main" field in package.json', async (t) => {
-  t.plan(2)
-
-  const drive = await mirror(path.join(__dirname, 'fixtures'))
-  const basedir = '/resolver'
-  try {
-    await resolve(drive, './invalid_main', { basedir })
-  } catch (err) {
-    t.is(err.message, 'Package ./invalid_main main must be a string')
-    t.is(err.code, 'INVALID_PACKAGE_MAIN')
-  }
-})
-
 test('conditional exports', async (t) => {
   t.plan(4)
 
@@ -336,38 +312,19 @@ test('conditional exports', async (t) => {
     t.is(result, '/node_modules/conditional-exports/index.cjs.js')
   }
   {
-    const runtimes = new Set(['require'])
+    const runtimes = ['require']
     const result = await resolve(drive, 'conditional-exports/submodule.js', { runtimes })
     t.is(result, '/node_modules/conditional-exports/prod/index.cjs.js')
   }
   {
-    const runtimes = new Set(['node'])
+    const runtimes = ['node']
     const result = await resolve(drive, 'conditional-exports/conditional.js', { runtimes })
     t.is(result, '/node_modules/conditional-exports/feature-node.js')
   }
   {
-    const runtimes = new Set(['default'])
+    const runtimes = ['default']
     const result = await resolve(drive, 'conditional-exports/conditional.js', { runtimes })
     t.is(result, '/node_modules/conditional-exports/feature.js')
-  }
-})
-
-test('npm registry', async (t) => {
-  t.plan(3)
-
-  const drive = await mirror(path.join(__dirname, 'fixtures'))
-  {
-    const result = await resolve(drive, '@registry/module')
-    t.is(result, '/node_modules/@registry/module/index.js')
-  }
-  {
-    const result = await resolve(drive, '@registry/module/file')
-    t.is(result, '/node_modules/@registry/module/file.js')
-  }
-  {
-    const runtimes = new Set(['require'])
-    const result = await resolve(drive, '@registry/module/submodule.js', { runtimes })
-    t.is(result, '/node_modules/@registry/module/submodule/index.js')
   }
 })
 

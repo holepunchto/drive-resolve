@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "b4a": "^1.6.4",
-    "exports-map": "^1.0.2",
-    "unix-path-resolve": "^1.0.2"
+    "bare-module-resolve": "^1.2.5"
   }
 }
