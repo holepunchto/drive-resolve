@@ -27,7 +27,7 @@ module.exports = async (drive, id, opts = {}) => {
     return null
   }
 
-  const parentURL = url.pathToFileURL(basedir[basedir.length - 1] === path.sep ? basedir : basedir + '/')
+  const parentURL = url.pathToFileURL(basedir[basedir.length - 1] === path.sep ? basedir : basedir + path.sep)
 
   for await (const moduleURL of resolve(id, parentURL, { extensions, conditions }, readPackage)) {
     const pathname = url.fileURLToPath(moduleURL)
