@@ -1,7 +1,6 @@
 'use strict'
 const resolve = require('bare-module-resolve')
 const b4a = require('b4a')
-const { URL } = require('url')
 
 module.exports = async (drive, id, opts = {}) => {
   const extensions = opts.extensions || ['.js', '.cjs', '.json', '.mjs']
