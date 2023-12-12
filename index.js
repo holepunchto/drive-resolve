@@ -15,13 +15,16 @@ module.exports = async (drive, id, opts = {}) => {
 
     if (Object.hasOwn(sourceOverwrites, pathname)) {
       const overwrite = sourceOverwrites[pathname]
-      return JSON.parse(overwrite.toString())
+      return JSON.parse(b4a.toString(overwrite))
     }
 
-    if (await drive.entry(pathname)) {
-      const file = await drive.get(pathname)
-      return JSON.parse(file.toString())
+    const entry = await drive.entry(pathname)
+    if (entry) {
+      const file = await drive.get(entry)
+      return JSON.parse(b4a.toString(file))
     }
+
+    return null
   }
 
   const parentURL = url.pathToFileURL(basedir[basedir.length - 1] === path.sep ? basedir : basedir + '/')
