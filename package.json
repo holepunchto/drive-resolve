@@ -1,13 +1,13 @@
 {
-  "name": "@holepunchto/drive-resolve",
+  "name": "drive-resolve",
   "version": "1.0.0",
-  "description": "The node_modules resolution algo for drives",
+  "description": "Asynchronous require resolution in Hyperdrive",
   "main": "index.js",
   "files": [
     "index.js"
   ],
   "scripts": {
-    "test": "brittle test/index.test.js",
+    "test": "standard && brittle test/index.test.js",
     "fix": "standard --fix"
   },
   "repository": {
