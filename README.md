@@ -1,31 +1,31 @@
 # @Holepunchto/drive-resolve
 
 ``` 
-npm install @holepunchto/drive-resolve
+npm install drive-resolve
 ``` 
 
-Synchronous require resolution in [Hyperdrive](https://github.com/holepunchto/hyperdrive).
+Asynchronous require resolution in [Hyperdrive](https://github.com/holepunchto/hyperdrive).
 
 ## Usage
 
 ``` javascript
 const resolve = require('@holepunchto/resolve')
-resolve(drive, 'bar, (err, res) => {
-  console.log(err) // /node_modules/bar/index.js
-})
-
+const result = await resolve(drive, 'bar')
+console.log(result) // /path/to/bar/index.js
 ```
 
 ## API
 
-### resolve(drive, id, opts = {}, callback)
+### async resolve(drive, specifier, opts = {})
 
 `options` include:
 
 ``` javascript
 {
   basedir: string, // directory to begin resolving from
-  extensions: []   // array of extensions to search
+  extensions: [],   // array of extensions to search
+  conditions: [], // array of import conditions
+  sourceOverwrites: // source overwrites key-value map (file -> source)
 }
 ```
 
