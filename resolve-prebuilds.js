@@ -12,10 +12,10 @@ module.exports = async function resolvePrebuilds (drive, basedir) {
       const version = pkg.version
 
       const prebuildCandidates = [
-        `./prebuilds/${process.platform}-${process.arch}/${name}@${version}.bare`,
-        `./prebuilds/${process.platform}-${process.arch}/${name}@${version}.node`,
         `./prebuilds/${process.platform}-${process.arch}/${name}.bare`,
-        `./prebuilds/${process.platform}-${process.arch}/${name}.node`
+        `./prebuilds/${process.platform}-${process.arch}/${name}@${version}.bare`,
+        `./prebuilds/${process.platform}-${process.arch}/${name}.node`,
+        `./prebuilds/${process.platform}-${process.arch}/${name}@${version}.node`
       ]
 
       for (const prebuildCandidate of prebuildCandidates) {

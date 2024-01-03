@@ -8,7 +8,7 @@
     "resolve-prebuilds.js"
   ],
   "scripts": {
-    "test": "standard && brittle test/index.test.js",
+    "test": "standard && brittle test/*.test.js",
     "fix": "standard --fix"
   },
   "repository": {
