@@ -10,9 +10,19 @@ module.exports = async function resolvePrebuilds (drive, basedir) {
     if (pkg) {
       const name = pkg.name
       const version = pkg.version
-      const prebuildsPath = unixResolve(candidate, `./prebuilds/${process.arch}/${name}@${version}`)
-      const prebuilds = await readPrebuilds(drive, prebuildsPath, '.node') || await readPrebuilds(drive, prebuildsPath, '.bare')
-      if (prebuilds) return prebuilds
+
+      const prebuildCandidates = [
+        `./prebuilds/${process.platform}-${process.arch}/${name}@${version}.bare`,
+        `./prebuilds/${process.platform}-${process.arch}/${name}@${version}.node`,
+        `./prebuilds/${process.platform}-${process.arch}/${name}.bare`,
+        `./prebuilds/${process.platform}-${process.arch}/${name}.node`
+      ]
+
+      for (const prebuildCandidate of prebuildCandidates) {
+        const prebuildsPath = unixResolve(candidate, prebuildCandidate)
+        const prebuilds = await readPrebuilds(drive, prebuildsPath)
+        if (prebuilds) return prebuildsPath
+      }
     }
   }
 }
@@ -36,6 +46,6 @@ async function readPackage (drive, path) {
   return null
 }
 
-async function readPrebuilds (drive, path, extension) {
-  return drive.entry(path + extension)
+async function readPrebuilds (drive, path) {
+  return drive.entry(path)
 }
