@@ -37,3 +37,13 @@ test('node prebuilds', async (t) => {
     t.is(result, `/node-prebuilds/prebuilds/${process.platform}-${process.arch}/node-prebuilds.node`)
   }
 })
+
+test('bare prebuilds in parent', async (t) => {
+  t.plan(1)
+  const name = 'bare-prebuilds'
+  const version = '1.0.0'
+  const drive = await fixtures()
+  await drive.put(`/bare-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}@${version}.bare`, Buffer.alloc(1))
+  const result = await prebuilds(drive, '/bare-prebuilds/child/path')
+  t.is(result, `/bare-prebuilds/prebuilds/${process.platform}-${process.arch}/bare-prebuilds@1.0.0.bare`)
+})
