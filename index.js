@@ -1,10 +1,9 @@
 'use strict'
-
-const bareResolve = require('bare-module-resolve')
-const prebuilds = require('./resolve-prebuilds')
+const resolve = require('bare-module-resolve')
+const resolvePrebuilds = require('./resolve-prebuilds.js')
 const b4a = require('b4a')
 
-async function resolve (drive, id, opts = {}) {
+module.exports = async function driveResolve (drive, id, opts = {}) {
   const extensions = opts.extensions || ['.js', '.cjs', '.json', '.mjs']
   const basedir = opts.basedir || '/'
   const conditions = opts.conditions || opts.runtimes /* compat */ || {}
@@ -29,7 +28,7 @@ async function resolve (drive, id, opts = {}) {
 
   const parentURL = toFileURL(basedir[basedir.length - 1] === '/' ? basedir : basedir + '/')
 
-  for await (const moduleURL of bareResolve(id, parentURL, { extensions, conditions }, readPackage)) {
+  for await (const moduleURL of resolve(id, parentURL, { extensions, conditions }, readPackage)) {
     const key = fromFileURL(moduleURL)
 
     if (await drive.entry(key)) {
@@ -42,15 +41,12 @@ async function resolve (drive, id, opts = {}) {
   throw err
 }
 
+module.exports.prebuilds = resolvePrebuilds
+
 function toFileURL (path) {
   return new URL('file://' + encodeURI(path))
 }
 
 function fromFileURL (url) {
   return decodeURI(url.pathname)
-}
-
-module.exports = {
-  resolve,
-  prebuilds
 }
