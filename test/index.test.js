@@ -1,5 +1,5 @@
 const test = require('brittle')
-const resolve = require('../index.js')
+const { resolve } = require('../index.js')
 const { fixtures } = require('./helpers/index.js')
 
 test('resolves absolute dir', async (t) => {

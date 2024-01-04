@@ -1,5 +1,5 @@
 const test = require('brittle')
-const resolvePrebuilds = require('../resolve-prebuilds')
+const { prebuilds } = require('../index.js')
 const { fixtures } = require('./helpers/index.js')
 
 test('bare prebuilds', async (t) => {
@@ -9,13 +9,13 @@ test('bare prebuilds', async (t) => {
   {
     const drive = await fixtures()
     await drive.put(`/bare-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}@${version}.bare`, Buffer.alloc(1))
-    const result = await resolvePrebuilds(drive, '/bare-prebuilds/prebuilds')
+    const result = await prebuilds(drive, '/bare-prebuilds/prebuilds')
     t.is(result, `/bare-prebuilds/prebuilds/${process.platform}-${process.arch}/bare-prebuilds@1.0.0.bare`)
   }
   {
     const drive = await fixtures()
     await drive.put(`/bare-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}.bare`, Buffer.alloc(1))
-    const result = await resolvePrebuilds(drive, '/bare-prebuilds/prebuilds')
+    const result = await prebuilds(drive, '/bare-prebuilds/prebuilds')
     t.is(result, `/bare-prebuilds/prebuilds/${process.platform}-${process.arch}/bare-prebuilds.bare`)
   }
 })
@@ -27,13 +27,13 @@ test('node prebuilds', async (t) => {
   {
     const drive = await fixtures()
     await drive.put(`/node-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}@${version}.node`, Buffer.alloc(1))
-    const result = await resolvePrebuilds(drive, '/node-prebuilds/prebuilds')
+    const result = await prebuilds(drive, '/node-prebuilds/prebuilds')
     t.is(result, `/node-prebuilds/prebuilds/${process.platform}-${process.arch}/node-prebuilds@1.0.0.node`)
   }
   {
     const drive = await fixtures()
     await drive.put(`/node-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}.node`, Buffer.alloc(1))
-    const result = await resolvePrebuilds(drive, '/node-prebuilds/prebuilds')
+    const result = await prebuilds(drive, '/node-prebuilds/prebuilds')
     t.is(result, `/node-prebuilds/prebuilds/${process.platform}-${process.arch}/node-prebuilds.node`)
   }
 })
