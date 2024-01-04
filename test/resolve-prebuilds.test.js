@@ -26,14 +26,14 @@ test('node prebuilds', async (t) => {
   const version = '1.0.0'
   {
     const drive = await fixtures()
-    await drive.put(`/node-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}@${version}.bare`, Buffer.alloc(1))
+    await drive.put(`/node-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}@${version}.node`, Buffer.alloc(1))
     const result = await resolvePrebuilds(drive, '/node-prebuilds/prebuilds')
-    t.is(result, `/node-prebuilds/prebuilds/${process.platform}-${process.arch}/node-prebuilds@1.0.0.bare`)
+    t.is(result, `/node-prebuilds/prebuilds/${process.platform}-${process.arch}/node-prebuilds@1.0.0.node`)
   }
   {
     const drive = await fixtures()
-    await drive.put(`/node-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}.bare`, Buffer.alloc(1))
+    await drive.put(`/node-prebuilds/prebuilds/${process.platform}-${process.arch}/${name}.node`, Buffer.alloc(1))
     const result = await resolvePrebuilds(drive, '/node-prebuilds/prebuilds')
-    t.is(result, `/node-prebuilds/prebuilds/${process.platform}-${process.arch}/node-prebuilds.bare`)
+    t.is(result, `/node-prebuilds/prebuilds/${process.platform}-${process.arch}/node-prebuilds.node`)
   }
 })
