@@ -29,7 +29,7 @@ module.exports = async function resolvePrebuilds (drive, basedir) {
 
 function getCandidates (basedir) {
   const candidates = []
-  candidates.unshift(path.dirname(basedir))
+  candidates.unshift(basedir)
   while (candidates[0] !== '/') {
     candidates.unshift(path.dirname(candidates[0]))
   }
