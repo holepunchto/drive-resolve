@@ -2,7 +2,9 @@ const path = require('path')
 const b4a = require('b4a')
 const unixResolve = require('unix-path-resolve')
 
-module.exports = async function resolvePrebuilds (drive, basedir) {
+const host = require.addon ? require.addon.host : process.platform + '-' + process.arch
+
+module.exports = async function resolveAddon (drive, basedir) {
   const candidates = getCandidates(basedir)
   while (candidates.length) {
     const candidate = candidates.pop()
@@ -12,10 +14,10 @@ module.exports = async function resolvePrebuilds (drive, basedir) {
       const version = pkg.version
 
       const prebuildCandidates = [
-        `./prebuilds/${process.platform}-${process.arch}/${name}.bare`,
-        `./prebuilds/${process.platform}-${process.arch}/${name}@${version}.bare`,
-        `./prebuilds/${process.platform}-${process.arch}/${name}.node`,
-        `./prebuilds/${process.platform}-${process.arch}/${name}@${version}.node`
+        `./prebuilds/${host}/${name}.bare`,
+        `./prebuilds/${host}/${name}@${version}.bare`,
+        `./prebuilds/${host}/${name}.node`,
+        `./prebuilds/${host}/${name}@${version}.node`
       ]
 
       for (const prebuildCandidate of prebuildCandidates) {

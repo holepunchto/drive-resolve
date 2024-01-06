@@ -1,6 +1,6 @@
 'use strict'
 const resolve = require('bare-module-resolve')
-const resolvePrebuilds = require('./resolve-prebuilds.js')
+const resolveAddon = require('./addon.js')
 const b4a = require('b4a')
 
 module.exports = async function driveResolve (drive, id, opts = {}) {
@@ -41,7 +41,7 @@ module.exports = async function driveResolve (drive, id, opts = {}) {
   throw err
 }
 
-module.exports.prebuilds = resolvePrebuilds
+module.exports.addon = resolveAddon
 
 function toFileURL (path) {
   return new URL('file://' + encodeURI(path))
