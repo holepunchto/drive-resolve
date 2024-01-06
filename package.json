@@ -4,10 +4,11 @@
   "description": "Asynchronous require resolution in Hyperdrive",
   "main": "index.js",
   "files": [
-    "index.js"
+    "index.js",
+    "resolve-prebuilds.js"
   ],
   "scripts": {
-    "test": "standard && brittle test/index.test.js",
+    "test": "standard && brittle test/*.test.js",
     "fix": "standard --fix"
   },
   "repository": {
@@ -37,6 +38,7 @@
   },
   "dependencies": {
     "b4a": "^1.6.4",
-    "bare-module-resolve": "^1.2.5"
+    "bare-module-resolve": "^1.2.5",
+    "unix-path-resolve": "^1.0.2"
   }
 }

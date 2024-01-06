@@ -30,6 +30,10 @@ const resolved = await resolve(drive, 'bar')
 }
 ```
 
+#### `const prebuilds = async resolve.prebuilds(drive, basedir)`
+
+Returns closest bare/node prebuilds from basedir.
+
 ## License
 
 Apache-2.0
