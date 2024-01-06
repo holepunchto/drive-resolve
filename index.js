@@ -6,7 +6,7 @@ const b4a = require('b4a')
 module.exports = async function driveResolve (drive, id, opts = {}) {
   const extensions = opts.extensions || ['.js', '.cjs', '.json', '.mjs']
   const basedir = opts.basedir || '/'
-  const conditions = opts.conditions || opts.runtimes /* compat */ || {}
+  const conditions = opts.conditions || opts.runtimes /* compat */ || []
   const sourceOverwrites = opts.sourceOverwrites || {}
 
   const readPackage = async (packageURL) => {
