@@ -8,6 +8,7 @@ module.exports = async function driveResolve (drive, id, opts = {}) {
   const basedir = opts.basedir || '/'
   const conditions = opts.conditions || opts.runtimes /* compat */ || {}
   const sourceOverwrites = opts.sourceOverwrites || {}
+  const imports = opts.imports
 
   const readPackage = async (packageURL) => {
     const key = fromFileURL(packageURL)
@@ -28,7 +29,7 @@ module.exports = async function driveResolve (drive, id, opts = {}) {
 
   const parentURL = toFileURL(basedir[basedir.length - 1] === '/' ? basedir : basedir + '/')
 
-  for await (const moduleURL of resolve(id, parentURL, { extensions, conditions }, readPackage)) {
+  for await (const moduleURL of resolve(id, parentURL, { extensions, conditions, imports }, readPackage)) {
     const key = fromFileURL(moduleURL)
 
     if (await drive.entry(key)) {
