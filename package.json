@@ -1,6 +1,6 @@
 {
   "name": "drive-resolve",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Asynchronous require resolution in Hyperdrive",
   "main": "index.js",
   "files": [
