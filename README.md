@@ -27,6 +27,7 @@ const resolved = await resolve(drive, 'bar')
   extensions: [],   // array of extensions to search
   conditions: [], // array of import conditions
   sourceOverwrites: {} // source overwrites key-value map (file -> source)
+  imports: // An additional "imports" map to apply to all specifiers. Follows the same syntax and rules as the "imports" property defined in `package.json`.
 }
 ```
 
