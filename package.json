@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "b4a": "^1.6.4",
+    "bare-addon-resolve": "^1.0.0",
     "bare-module-resolve": "^1.2.5",
     "unix-path-resolve": "^1.0.2"
   }
