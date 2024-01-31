@@ -15,7 +15,7 @@ module.exports = async function resolveAddon (drive, basedir) {
 
   const parentURL = toFileURL(basedir[basedir.length - 1] === '/' ? basedir : basedir + '/')
 
-  for await (const addonURL of resolve('.', parentURL, { name: null, version: null, host, extensions: ['.bare', '.node'] }, readPackage)) {
+  for await (const addonURL of resolve('.', parentURL, { host, extensions: ['.bare', '.node'] }, readPackage)) {
     const key = fromFileURL(addonURL)
 
     if (await drive.entry(key)) {
