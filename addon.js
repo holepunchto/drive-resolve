@@ -1,4 +1,3 @@
-const path = require('path')
 const b4a = require('b4a')
 const unixResolve = require('unix-path-resolve')
 
@@ -33,7 +32,7 @@ function getCandidates (basedir) {
   const candidates = []
   candidates.unshift(basedir)
   while (candidates[0] !== '/') {
-    candidates.unshift(path.dirname(candidates[0]))
+    candidates.unshift(unixResolve(candidates[0], '..'))
   }
   return candidates
 }
