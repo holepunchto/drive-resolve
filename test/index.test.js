@@ -165,7 +165,10 @@ test('custom extensions', async (t) => {
   const dir = '/resolver'
 
   {
-    const result = await resolve(drive, './cup.coffee', { basedir: dir, extensions: ['.js', '.coffee'] })
+    const result = await resolve(drive, './cup.coffee', {
+      basedir: dir,
+      extensions: ['.js', '.coffee']
+    })
     t.is(result, dir + '/cup.coffee')
   }
 
@@ -194,12 +197,18 @@ test('by default resolves to .js extension unless specified in opts.extensions',
   }
 
   {
-    const result = await resolve(drive, './mug', { basedir: dir, extensions: ['.coffee', '.js'] })
+    const result = await resolve(drive, './mug', {
+      basedir: dir,
+      extensions: ['.coffee', '.js']
+    })
     t.is(result, dir + '/mug.coffee')
   }
 
   {
-    const result = await resolve(drive, './mug', { basedir: dir, extensions: ['.js', '.coffee'] })
+    const result = await resolve(drive, './mug', {
+      basedir: dir,
+      extensions: ['.js', '.coffee']
+    })
     t.is(result, dir + '/mug.js')
   }
 })
@@ -235,7 +244,9 @@ test('resolves to index.js if no main in package.json', async (t) => {
   const resolverDir = '/resolver'
   const dir = resolverDir + '/missing_main'
 
-  const result = await resolve(drive, './missing_main', { basedir: resolverDir })
+  const result = await resolve(drive, './missing_main', {
+    basedir: resolverDir
+  })
   t.is(result, dir + '/index.js')
 })
 
@@ -312,17 +323,23 @@ test('conditional exports', async (t) => {
   }
   {
     const runtimes = ['require']
-    const result = await resolve(drive, 'conditional-exports/submodule.js', { runtimes })
+    const result = await resolve(drive, 'conditional-exports/submodule.js', {
+      runtimes
+    })
     t.is(result, '/node_modules/conditional-exports/prod/index.cjs.js')
   }
   {
     const runtimes = ['node']
-    const result = await resolve(drive, 'conditional-exports/conditional.js', { runtimes })
+    const result = await resolve(drive, 'conditional-exports/conditional.js', {
+      runtimes
+    })
     t.is(result, '/node_modules/conditional-exports/feature-node.js')
   }
   {
     const runtimes = ['default']
-    const result = await resolve(drive, 'conditional-exports/conditional.js', { runtimes })
+    const result = await resolve(drive, 'conditional-exports/conditional.js', {
+      runtimes
+    })
     t.is(result, '/node_modules/conditional-exports/feature.js')
   }
 })
