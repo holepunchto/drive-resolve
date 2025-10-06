@@ -1,9 +1,7 @@
 const b4a = require('b4a')
 const unixResolve = require('unix-path-resolve')
 
-const host = require.addon
-  ? require.addon.host
-  : process.platform + '-' + process.arch
+const host = require.addon ? require.addon.host : process.platform + '-' + process.arch
 
 module.exports = async function resolveAddon(drive, basedir) {
   const candidates = getCandidates(basedir)

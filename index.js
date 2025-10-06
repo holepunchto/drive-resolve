@@ -27,9 +27,7 @@ module.exports = async function driveResolve(drive, id, opts = {}) {
     return null
   }
 
-  const parentURL = toFileURL(
-    basedir[basedir.length - 1] === '/' ? basedir : basedir + '/'
-  )
+  const parentURL = toFileURL(basedir[basedir.length - 1] === '/' ? basedir : basedir + '/')
 
   for await (const moduleURL of resolve(
     id,
