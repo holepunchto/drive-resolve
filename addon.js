@@ -3,7 +3,7 @@ const unixResolve = require('unix-path-resolve')
 
 const host = require.addon ? require.addon.host : process.platform + '-' + process.arch
 
-module.exports = async function resolveAddon (drive, basedir) {
+module.exports = async function resolveAddon(drive, basedir) {
   const candidates = getCandidates(basedir)
   while (candidates.length) {
     const candidate = candidates.pop()
@@ -28,7 +28,7 @@ module.exports = async function resolveAddon (drive, basedir) {
   }
 }
 
-function getCandidates (basedir) {
+function getCandidates(basedir) {
   const candidates = []
   candidates.unshift(basedir)
   while (candidates[0] !== '/') {
@@ -37,7 +37,7 @@ function getCandidates (basedir) {
   return candidates
 }
 
-async function readPackage (drive, path) {
+async function readPackage(drive, path) {
   const entry = await drive.entry(unixResolve(path, './package.json'))
   if (entry) {
     const file = await drive.get(entry)
@@ -47,6 +47,6 @@ async function readPackage (drive, path) {
   return null
 }
 
-async function readPrebuilds (drive, path) {
+async function readPrebuilds(drive, path) {
   return drive.entry(path)
 }

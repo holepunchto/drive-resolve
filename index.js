@@ -3,7 +3,7 @@ const resolve = require('bare-module-resolve')
 const resolveAddon = require('./addon.js')
 const b4a = require('b4a')
 
-module.exports = async function driveResolve (drive, id, opts = {}) {
+module.exports = async function driveResolve(drive, id, opts = {}) {
   const extensions = opts.extensions || ['.js', '.cjs', '.json', '.mjs']
   const basedir = opts.basedir || '/'
   const conditions = opts.conditions || opts.runtimes /* compat */ || []
@@ -29,7 +29,12 @@ module.exports = async function driveResolve (drive, id, opts = {}) {
 
   const parentURL = toFileURL(basedir[basedir.length - 1] === '/' ? basedir : basedir + '/')
 
-  for await (const moduleURL of resolve(id, parentURL, { extensions, conditions, imports }, readPackage)) {
+  for await (const moduleURL of resolve(
+    id,
+    parentURL,
+    { extensions, conditions, imports },
+    readPackage
+  )) {
     const key = fromFileURL(moduleURL)
 
     if (await drive.entry(key)) {
@@ -44,10 +49,10 @@ module.exports = async function driveResolve (drive, id, opts = {}) {
 
 module.exports.addon = resolveAddon
 
-function toFileURL (path) {
+function toFileURL(path) {
   return new URL('file://' + encodeURI(path))
 }
 
-function fromFileURL (url) {
+function fromFileURL(url) {
   return decodeURI(url.pathname)
 }

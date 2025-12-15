@@ -5,7 +5,7 @@ const LocalDrive = require('localdrive')
 const Corestore = require('corestore')
 const Mirror = require('mirror-drive')
 
-async function mirror (dir) {
+async function mirror(dir) {
   const store = new Corestore(RAM.reusable())
   await store.ready()
   const drive = new Hyperdrive(store)
@@ -19,7 +19,7 @@ async function mirror (dir) {
   return dst
 }
 
-async function fixtures () {
+async function fixtures() {
   return mirror(path.join(__dirname, '..', 'fixtures'))
 }
 
